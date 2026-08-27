@@ -1,0 +1,20 @@
+Django>=5.1
+pymupdf>=1.23.0
+requests>=2.31.0
+python-dotenv>=1.0.0
+rank-bm25>=0.2
+numpy>=1.24.0
+Pillow>=11.0.0
+# Advanced search dependencies
+sentence-transformers>=2.2.2
+scikit-learn>=1.3.0
+fuzzywuzzy>=0.18.0
+python-levenshtein>=0.22.0
+# Knowledge Base Builder dependencies
+tqdm>=4.66.0
+python-docx>=1.1.0
+pdf2image>=1.17.0
+# Tavily Web Search
+tavily-python>=0.3.0
+# PDF Parsing (local, free, replaces LlamaParse)
+opendataloader-pdf>=2.5.0

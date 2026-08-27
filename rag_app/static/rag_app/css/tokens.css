@@ -1,0 +1,191 @@
+/* ============================================================
+   Zenith Design Tokens (Phase 1) — Spec §1, §2.3, §3, §5
+   Single source of truth. No hex values outside this file.
+   ============================================================ */
+
+:root {
+  /* === 1. COLOR SYSTEM — BASE LAYER (dark-only, locked theme) === */
+  --color-bg-deep:        #05080b;      /* Canvas - near-black with blue undertone */
+  --color-bg-elevated:    #0d141c;      /* Cards, panels */
+  --color-bg-glass:       rgba(13, 20, 28, 0.72);
+
+  /* === BORDER LAYER === */
+  --color-border-subtle:  rgba(100, 116, 139, 0.08);
+  --color-border-glass:   rgba(148, 163, 184, 0.12);
+  --color-border-strong:  rgba(148, 163, 184, 0.20);
+
+  /* === TEXT LAYER === */
+  --color-text-primary:   #e2e8f0;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted:     #64748b;
+  --color-text-inverse:   #05080b;
+
+  /* === ACCENT LAYER (single brand accent + semantic) === */
+  --color-accent:         #00d4aa;
+  --color-accent-hover:   #14e8bb;
+  --color-accent-dim:     rgba(0, 212, 170, 0.10);
+  --color-accent-border:  rgba(0, 212, 170, 0.25);
+  --color-accent-glow:    rgba(0, 212, 170, 0.15);
+
+  /* === SEMANTIC ACCENTS (state only, never decorative) === */
+  --color-success:        #00d4aa;
+  --color-warning:        #f59e0b;
+  --color-warning-dim:    rgba(245, 158, 11, 0.10);
+  --color-warning-border: rgba(245, 158, 11, 0.25);
+  --color-error:          #ef4444;
+  --color-error-dim:      rgba(239, 68, 68, 0.10);
+  --color-error-border:   rgba(239, 68, 68, 0.25);
+  --color-info:           #3b82f6;
+  --color-info-dim:       rgba(59, 130, 246, 0.10);
+  --color-info-border:    rgba(59, 130, 246, 0.25);
+
+  /* === GLASS HIGHLIGHTS === */
+  --color-glass-highlight-top:    rgba(255, 255, 255, 0.04);
+  --color-glass-highlight-bottom: rgba(255, 255, 255, 0.01);
+
+  /* === SHADOWS === */
+  --shadow-glass-sm:    0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-glass-md:    0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow-glass-lg:    0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-glass-xl:    0 16px 48px rgba(0, 0, 0, 0.55);
+  --shadow-focus:       0 0 0 3px var(--color-accent-glow);
+
+  /* === 2. TYPOGRAPHY === */
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-ui:      'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Fluid type scale (375px -> 1440px) */
+  --text-xs:    clamp(0.625rem, 0.600rem + 0.125vw, 0.6875rem);
+  --text-sm:    clamp(0.750rem, 0.700rem + 0.250vw, 0.8125rem);
+  --text-base:  clamp(0.875rem, 0.825rem + 0.250vw, 0.9375rem);
+  --text-lg:    clamp(1.000rem, 0.925rem + 0.375vw, 1.125rem);
+  --text-xl:    clamp(1.125rem, 1.025rem + 0.500vw, 1.375rem);
+  --text-2xl:   clamp(1.500rem, 1.350rem + 0.750vw, 2.000rem);
+  --text-3xl:   clamp(2.000rem, 1.750rem + 1.250vw, 3.000rem);
+
+  /* Line heights */
+  --leading-tight:   1.1;
+  --leading-snug:    1.35;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.6;
+  --leading-mono:    1.4;
+
+  /* Letter spacing */
+  --tracking-tighter: -0.02em;
+  --tracking-tight:   -0.01em;
+  --tracking-normal:  0;
+  --tracking-wide:    0.01em;
+  --tracking-wider:   0.08em;
+  --tracking-widest:  0.14em;
+
+  /* === 3. SPACING SCALE (base 4px) === */
+  --space-0:     0;
+  --space-1:     0.25rem;
+  --space-2:     0.5rem;
+  --space-3:     0.75rem;
+  --space-4:     1rem;
+  --space-5:     1.25rem;
+  --space-6:     1.5rem;
+  --space-8:     2rem;
+  --space-10:    2.5rem;
+  --space-12:    3rem;
+  --space-16:    4rem;
+  --space-20:    5rem;
+  --space-24:    6rem;
+
+  /* === RADIUS SCALE === */
+  --radius-sm:    8px;
+  --radius-md:    12px;
+  --radius-lg:    16px;
+  --radius-xl:    20px;
+  --radius-full:  9999px;
+
+  /* === BREAKPOINTS (reference for JS) === */
+  --bp-sm:   640px;
+  --bp-md:   768px;
+  --bp-lg:   1024px;
+  --bp-xl:   1280px;
+  --bp-2xl:  1536px;
+
+  /* === 4. GLASS TOKENS === */
+  --glass-blur:          saturate(180%) blur(24px);
+  --glass-blur-reduced:  saturate(150%) blur(16px);
+  --glass-bg:            var(--color-bg-glass);
+  --glass-border:        var(--color-border-glass);
+  --glass-highlight:     var(--color-glass-highlight-top);
+  --glass-radius:        var(--radius-lg);
+
+  /* === 5. MOTION — EASING CURVES (mandatory) === */
+  --ease-out:       cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-out-expo:  cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-in-out:    cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-spring:    cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-snappy:    cubic-bezier(0.05, 0.9, 0.1, 1);
+  --ease-linear:    linear;
+  --ease-exit:      cubic-bezier(0.4, 0, 1, 1);
+
+  /* === DURATION SCALE === */
+  --duration-instant:   0ms;
+  --duration-fast:      100ms;
+  --duration-quick:     160ms;
+  --duration-standard:  200ms;
+  --duration-smooth:    280ms;
+  --duration-emphasized: 350ms;
+  --duration-slow:      500ms;
+}
+
+/* === KEYFRAME LIBRARY (components wire these in Phase 3) === */
+@keyframes z-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes z-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes z-slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes z-slide-down {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes z-slide-in-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes z-slide-out-right {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(16px); }
+}
+@keyframes z-clip-reveal {
+  from { clip-path: inset(0 100% 0 0); opacity: 0; }
+  to   { clip-path: inset(0 0 0 0); opacity: 1; }
+}
+@keyframes z-pulse-bar {
+  0%, 80%, 100% { transform: scaleY(1); opacity: 0.5; }
+  40% { transform: scaleY(1.8); opacity: 1; }
+}
+@keyframes z-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Stagger helpers */
+.stagger-1 { animation-delay: 40ms; }
+.stagger-2 { animation-delay: 80ms; }
+.stagger-3 { animation-delay: 120ms; }
+.stagger-4 { animation-delay: 160ms; }
+.stagger-5 { animation-delay: 200ms; }
+.stagger-6 { animation-delay: 240ms; }
+
+/* === REDUCED MOTION (spec §5.3 — mandatory) === */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

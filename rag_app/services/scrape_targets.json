@@ -1,0 +1,50 @@
+[
+  {
+    "id": "india_dgft_bans",
+    "url": "https://www.dgft.gov.in/CP/itchs-import-export",
+    "region": "india",
+    "output_name": "DGFT_Live_Restrictions",
+    "expected_topic": "Current active export restrictions, bans, or quota limits specifically for Indian exporters",
+    "exclude_keywords": ["handbook of procedures", "foreign trade policy 2023", "how to apply", "basic customs manual"]
+  },
+  {
+    "id": "india_apeda_grapes",
+    "url": "https://apeda.gov.in/EU-Regulation",
+    "region": "india",
+    "output_name": "APEDA_Grapes_EU_Protocol",
+    "expected_topic": "Specific phytosanitary requirements, residue limits, and packing guidelines for exporting table grapes from India to the European Union",
+    "exclude_keywords": ["general apeda overview", "about apeda", "other fruits"]
+  },
+  {
+    "id": "usa_fda_india_alerts",
+    "url": "http://www.accessdata.fda.gov/cms_ia/country_IN.html",
+    "region": "us",
+    "output_name": "FDA_Import_Alerts_India",
+    "expected_topic": "Active FDA import alerts, detention without physical examination (DWPE), or refused shipments specifically targeting food, spices, or pharmaceuticals from India",
+    "exclude_keywords": ["21 cfr part", "fsma general rules", "how to register", "fda organization chart"]
+  },
+  {
+    "id": "usa_cbp_marking_textiles",
+    "url": "https://www.cbp.gov/document/publications/informed-compliance-publication-marking-country-origin-us-imports",
+    "region": "us",
+    "output_name": "CBP_Textile_Marking_Rules",
+    "expected_topic": "Specific CBP country of origin marking requirements for Indian textiles, handlooms, and apparel exemptions",
+    "exclude_keywords": ["general importing guide", "cbp mission statement", "tariff classification basics"]
+  },
+  {
+    "id": "eu_eudr_india",
+    "url": "https://environment.ec.europa.eu/topics/forests/deforestation/regulation-deforestation-free-products_en",
+    "region": "eu",
+    "output_name": "EU_EUDR_India_Guidance",
+    "expected_topic": "EUDR deforestation regulation implementation timeline, due diligence requirements, and specific compliance steps for Indian coffee, tea, or wood exporters",
+    "exclude_keywords": ["general eu environment policy", "eu biodiversity strategy"]
+  },
+  {
+    "id": "eu_cbam_india",
+    "url": "https://taxation-customs.ec.europa.eu/carbon-border-adjustment-mechanism_en",
+    "region": "eu",
+    "output_name": "EU_CBAM_India_Rules",
+    "expected_topic": "CBAM transitional rules, reporting requirements, and carbon certificate purchasing for Indian iron, steel, or aluminum exporters",
+    "exclude_keywords": ["general eu tax policy", "eu climate goals"]
+  }
+]

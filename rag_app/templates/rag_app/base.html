@@ -1,0 +1,35 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zenith Export AI</title>
+
+    <!-- Tailwind utilities — precompiled locally from templates + JS (see tailwind.config.js).
+         Regenerate after adding NEW utility classes:
+           npx tailwindcss -i rag_app/static/rag_app/css/tailwind.in.css -o rag_app/static/rag_app/css/tailwind.css --minify -->
+    <link rel="stylesheet" href="{% static 'rag_app/css/tailwind.css' %}">
+
+    <!-- Self-hosted Fonts (preloaded to avoid FOUC) -->
+    <link rel="preload" href="{% static 'rag_app/fonts/dm-serif-display-latin.woff2' %}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{% static 'rag_app/fonts/ibm-plex-sans-latin.woff2' %}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{% static 'rag_app/fonts/jetbrains-mono-latin.woff2' %}" as="font" type="font/woff2" crossorigin>
+
+    <!-- Markdown + sanitizer (vendored locally, pinned versions) -->
+    <script src="{% static 'rag_app/js/vendor/marked.min.js' %}"></script>
+    <script src="{% static 'rag_app/js/vendor/purify.min.js' %}"></script>
+
+    <!-- App Styles: fonts -> tokens -> glass -> chat -->
+    <link rel="stylesheet" href="{% static 'rag_app/css/fonts.css' %}">
+    <link rel="stylesheet" href="{% static 'rag_app/css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'rag_app/css/glass.css' %}">
+    <link rel="stylesheet" href="{% static 'rag_app/css/chat.css' %}">
+</head>
+<body class="bg-z-bg text-z-text-primary m-0 p-0 overflow-hidden h-screen w-screen">
+    <a href="#main-chat" class="skip-link">Skip to chat</a>
+    {% block content %}
+    {% endblock %}
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!-- ============================================================
+     RIGHT CONTEXT PANEL
+     ============================================================ -->
+<aside id="right-context-panel"
+       class="z-context-panel"
+       role="complementary"
+       aria-label="Source and document context"
+       aria-hidden="true">
+
+    <!-- Panel Header -->
+    <div class="z-context-header">
+        <h3 class="z-context-title">Context</h3>
+        <button type="button"
+                class="z-context-close"
+                id="context-panel-close"
+                aria-label="Close context panel">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Context Content -->
+    <div id="context-panel-content" class="z-context-content">
+        <!-- Default empty state -->
+        <div id="context-empty-state" class="z-context-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <p class="z-context-empty-title">No context selected</p>
+            <p class="z-context-empty-subtitle">Click a source or document to view details</p>
+        </div>
+
+        <!-- Source Inspector (hidden by default) -->
+        <div id="context-source-view" class="z-context-view" style="display:none;">
+            <div class="z-context-section">
+                <p class="z-context-section-label">Source</p>
+                <div id="context-source-details" class="z-context-details">
+                    <!-- Populated by context-panel.js -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Document Preview (hidden by default) -->
+        <div id="context-document-view" class="z-context-view" style="display:none;">
+            <div class="z-context-section">
+                <p class="z-context-section-label">Document</p>
+                <div id="context-document-details" class="z-context-details">
+                    <!-- Populated by context-panel.js -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Structured Data Detail (hidden by default) -->
+        <div id="context-data-view" class="z-context-view" style="display:none;">
+            <div class="z-context-section">
+                <p class="z-context-section-label">Details</p>
+                <div id="context-data-details" class="z-context-details">
+                    <!-- Populated by context-panel.js -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Related Queries (hidden by default) -->
+        <div id="context-related-view" class="z-context-view" style="display:none;">
+            <div class="z-context-section">
+                <p class="z-context-section-label">Related</p>
+                <div id="context-related-list" class="z-related-list" role="list">
+                    <!-- Populated by context-panel.js -->
+                </div>
+            </div>
+        </div>
+    </div>
+</aside>

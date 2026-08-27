@@ -1,0 +1,60 @@
+# Zenith Common Query Suggestions
+# One keyword queries
+apple
+grapes
+mango
+garlic
+wheat
+rice
+cotton
+spices
+hs code
+rodtep
+duty
+export
+import
+uae
+dubai
+usa
+saudi
+eu
+
+# Simple common queries
+hs code for apple
+hs code for grapes
+hs code for mango
+hs code for garlic
+hs code for wheat
+export apple to usa
+export grapes to usa
+export mango to dubai
+export mango to uae
+export garlic to saudi arabia
+export spices to eu
+duty rate for apple
+duty rate for mango
+rodtep rate for wheat
+rodtep rate for rice
+export procedure for apple
+export procedure for grapes
+export procedure for mango
+phytosanitary certificate for mango
+certificate of origin for export
+iec code application
+apeda registration for mango export
+how to export mango to dubai
+how to export apple to usa
+duty rate for export to uae
+import requirements for saudi arabia
+customs duty for grapes export
+what is hs code
+what is rodtep
+how to get export license
+
+# Full example queries
+what is hs code for apple and i have to export in usa
+what is hs code for grapes and export procedure to usa
+hs code for garlic import to saudi arabia
+i want to export mangoes to dubai what rate should i demand
+export procedure for mango to uae step by step
+duty rate for hapus mango export to dubai

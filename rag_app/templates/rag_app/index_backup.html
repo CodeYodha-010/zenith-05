@@ -1,0 +1,764 @@
+{% extends 'rag_app/base.html' %}
+
+{% block content %}
+<!-- Header with Glassmorphism -->
+<header class="bg-dark-card/80 backdrop-blur-md border-b border-white/10 px-4 py-4 flex-shrink-0 shadow-lg">
+    <div class="max-w-3xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-xl font-semibold text-white bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Zenith Export AI</h1>
+                <p class="text-xs text-gray-500">Premium Trade Compliance Assistant</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button type="button" onclick="selectRegion('india')" id="region-india" class="region-btn px-3 py-1.5 text-xs rounded-lg border transition-all duration-300 bg-gradient-to-r from-blue-600/20 to-blue-700/20 text-blue-300 border-blue-500/50 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/25">
+                🇮🇳 India
+            </button>
+            <button type="button" onclick="selectRegion('us')" id="region-us" class="region-btn px-3 py-1.5 text-xs rounded-lg border transition-all duration-300 bg-transparent text-gray-400 border-gray-700 hover:border-gray-500 hover:bg-gray-800/50">
+                🇺🇸 USA
+            </button>
+            <button type="button" onclick="selectRegion('eu')" id="region-eu" class="region-btn px-3 py-1.5 text-xs rounded-lg border transition-all duration-300 bg-transparent text-gray-400 border-gray-700 hover:border-gray-500 hover:bg-gray-800/50">
+                🇪🇺 EU
+            </button>
+            <button type="button" onclick="selectRegion('')" id="region-all" class="region-btn px-3 py-1.5 text-xs rounded-lg border transition-all duration-300 bg-transparent text-gray-400 border-gray-700 hover:border-gray-500 hover:bg-gray-800/50">
+                🌍 All
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- Chat Container -->
+<div id="chat-container" class="flex-1 overflow-y-auto px-4 py-6 bg-gradient-to-b from-dark-bg to-dark-card/50">
+    <div class="max-w-3xl mx-auto">
+        <!-- Welcome Message -->
+        <div id="welcome-message" class="text-center py-16">
+            <div class="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-blue-500/10">
+                <svg class="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-semibold text-white mb-3">Welcome to Zenith</h2>
+            <p class="text-gray-400 text-sm max-w-md mx-auto leading-relaxed">Your premium trade compliance assistant. Ask about HS codes, duty rates, customs procedures, export regulations, and more.</p>
+        </div>
+
+        <!-- Chat Messages -->
+        <div id="chat-messages" class="space-y-6"></div>
+    </div>
+</div>
+
+<!-- Input Area -->
+<div class="bg-dark-card/80 backdrop-blur-md border-t border-white/10 px-4 py-5 flex-shrink-0">
+    <div class="max-w-3xl mx-auto">
+        <!-- Question Input -->
+        <form id="question-form" class="relative">
+            <div class="relative">
+                <textarea
+                    id="question-input"
+                    rows="1"
+                    placeholder="Ask about trade compliance, HS codes, duty rates..."
+                    class="w-full bg-gradient-to-br from-dark-card to-dark-bg border border-white/10 rounded-2xl text-gray-100 placeholder-gray-500 px-5 py-4 pr-14 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent resize-none transition-all duration-300 shadow-xl shadow-black/20 hover:border-white/20"
+                ></textarea>
+                <button
+                    type="submit"
+                    id="send-button"
+                    class="absolute right-3 bottom-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 disabled:from-gray-700 disabled:to-gray-800 disabled:cursor-not-allowed text-white rounded-xl p-2.5 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 active:translate-y-0"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                    </svg>
+                </button>
+            </div>
+            <p class="text-xs text-gray-600 mt-2 text-center">Press Enter to send, Shift+Enter for new line</p>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Smooth Transitions */
+    .region-btn {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Premium Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    @keyframes pulse-ring {
+        0% {
+            transform: scale(0.8);
+            opacity: 1;
+        }
+        100% {
+            transform: scale(2.5);
+            opacity: 0;
+        }
+    }
+
+    @keyframes pulse-ring-2 {
+        0% {
+            transform: scale(0.8);
+            opacity: 0.8;
+        }
+        100% {
+            transform: scale(2.3);
+            opacity: 0;
+        }
+    }
+
+    @keyframes pulse-ring-3 {
+        0% {
+            transform: scale(0.8);
+            opacity: 0.6;
+        }
+        100% {
+            transform: scale(2.1);
+            opacity: 0;
+        }
+    }
+
+    @keyframes expandCollapse {
+        0%, 100% {
+            max-height: 0;
+            opacity: 0;
+        }
+        50% {
+            max-height: 1000px;
+            opacity: 1;
+        }
+    }
+
+    @keyframes glow-pulse {
+        0%, 100% {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+        50% {
+            box-shadow: 0 0 40px rgba(168, 85, 247, 0.5);
+        }
+    }
+
+    .chat-bubble {
+        animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Thinking Animation */
+    .thinking-rings {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .thinking-ring {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #3b82f6, #a855f7);
+        position: relative;
+    }
+
+    .thinking-ring::before {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        border: 2px solid rgba(59, 130, 246, 0.5);
+        animation: pulse-ring 1.5s ease-out infinite;
+    }
+
+    .thinking-ring:nth-child(2)::before {
+        animation-delay: 0.2s;
+    }
+
+    .thinking-ring:nth-child(3)::before {
+        animation-delay: 0.4s;
+    }
+
+    /* Collapsible Panel */
+    .thinking-panel {
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+    }
+
+    .thinking-panel.expanded {
+        max-height: 2000px;
+        opacity: 1;
+    }
+
+    /* Thinking Section */
+    .thinking-section {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(168, 85, 247, 0.1));
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .thinking-section.collapsed {
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+    }
+
+    .thinking-section.expanded {
+        max-height: 1500px;
+        opacity: 1;
+    }
+
+    .thinking-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        transition: background 0.2s;
+    }
+
+    .thinking-header:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .thinking-header-icon {
+        transition: transform 0.3s ease;
+    }
+
+    .thinking-header.expanded .thinking-header-icon {
+        transform: rotate(180deg);
+    }
+
+    .thinking-header-text {
+        font-weight: 600;
+        color: #60a5fa;
+        font-size: 0.875rem;
+    }
+
+    .thinking-content {
+        margin-top: 0.75rem;
+        color: #d1d5db;
+        font-size: 0.875rem;
+        line-height: 1.6;
+    }
+
+    /* Source Badge Styles */
+    .source-badge {
+        transition: all 0.3s ease;
+    }
+
+    .source-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    /* Markdown Styles */
+    .markdown-content ul { list-style-type: disc; margin-left: 1.5rem; margin-top: 0.5rem; }
+    .markdown-content ol { list-style-type: decimal; margin-left: 1.5rem; margin-top: 0.5rem; }
+    .markdown-content li { margin-bottom: 0.25rem; }
+    .markdown-content strong { font-weight: 600; color: #60a5fa; }
+    .markdown-content code { background: linear-gradient(135deg, #1e1e2e, #2a2a3e); padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.875rem; font-family: 'Fira Code', monospace; }
+    .markdown-content pre { background: linear-gradient(135deg, #1e1e2e, #2a2a3e); padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin-top: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.1); }
+    .markdown-content pre code { background: transparent; padding: 0; }
+    .markdown-content p { margin-bottom: 0.5rem; line-height: 1.7; }
+    .markdown-content a { color: #60a5fa; text-decoration: none; transition: color 0.2s; }
+    .markdown-content a:hover { text-decoration: underline; }
+
+    /* Gradient Text */
+    .gradient-text {
+        background: linear-gradient(135deg, #3b82f6, #a855f7);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #0a0a0f;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #3b82f6, #a855f7);
+        border-radius: 4px;
+    }
+</style>
+
+<script>
+    // State
+    let selectedRegion = 'india';
+    let isLoading = false;
+    let thinkingExpanded = false;
+
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Region selection
+    function selectRegion(region) {
+        selectedRegion = region;
+        document.querySelectorAll('.region-btn').forEach(btn => {
+            btn.className = 'region-btn px-3 py-1.5 text-xs rounded-lg border transition-all duration-300 bg-transparent text-gray-400 border-gray-700 hover:border-gray-500 hover:bg-gray-800/50';
+        });
+        const activeBtn = document.getElementById(`region-${region || 'all'}`);
+        activeBtn.className = 'region-btn px-3 py-1.5 text-xs rounded-lg border transition-all duration-300 bg-gradient-to-r from-blue-600/20 to-blue-700/20 text-blue-300 border-blue-500/50 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/25';
+    }
+
+    // Auto-resize textarea
+    const textarea = document.getElementById('question-input');
+    textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+    });
+
+    // Handle Enter key - FIXED
+    textarea.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            submitQuestion();
+        }
+    });
+
+    // Submit question function
+    function submitQuestion() {
+        const form = document.getElementById('question-form');
+        form.dispatchEvent(new Event('submit', { cancelable: true }));
+    }
+
+    // Add streaming message with collapsible thinking section
+    function addStreamingMessage() {
+        const container = document.getElementById('chat-messages');
+        const messageId = 'stream-' + Date.now();
+        const messageDiv = document.createElement('div');
+        messageDiv.id = messageId;
+        messageDiv.className = 'chat-bubble';
+        messageDiv.innerHTML = `
+            <div class="flex justify-start mb-6">
+                <div class="bg-gradient-to-br from-dark-card to-dark-bg border border-white/10 text-gray-100 rounded-2xl rounded-bl-md px-5 py-4 max-w-[90%] md:max-w-[85%] shadow-xl shadow-black/30">
+                    <!-- Thinking Animation -->
+                    <div class="thinking-rings mb-3">
+                        <div class="thinking-ring"></div>
+                        <div class="thinking-ring"></div>
+                        <div class="thinking-ring"></div>
+                    </div>
+
+                    <!-- Status Message -->
+                    <div class="stream-status text-sm text-gray-400 mb-3">Searching Knowledge Base...</div>
+
+                    <!-- Thinking Section (Collapsible) -->
+                    <div id="${messageId}-thinking" class="thinking-section mb-3">
+                        <button
+                            type="button"
+                            onclick="toggleThinking('${messageId}')"
+                            class="thinking-header w-full"
+                        >
+                            <svg class="thinking-header-icon w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                            <span class="thinking-header-text">Thinking Process</span>
+                        </button>
+                        <div id="${messageId}-thinking-content" class="thinking-content collapsed"></div>
+                    </div>
+
+                    <!-- Sources Section (Collapsible) -->
+                    <div id="${messageId}-sources" class="thinking-section mb-3">
+                        <button
+                            type="button"
+                            onclick="toggleSources('${messageId}')"
+                            class="thinking-header w-full"
+                        >
+                            <svg class="thinking-header-icon w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                            <span class="thinking-header-text">Sources</span>
+                        </button>
+                        <div id="${messageId}-sources-content" class="thinking-content collapsed">
+                            <div class="kb-sources-container mb-3"></div>
+                            <div class="web-sources-container mb-3"></div>
+                            <div class="fallback-banner-container mb-3"></div>
+                        </div>
+                    </div>
+
+                    <!-- Answer Content -->
+                    <div class="answer-content markdown-content text-sm leading-relaxed"></div>
+                </div>
+            </div>
+        `;
+        container.appendChild(messageDiv);
+        scrollToBottom();
+        return messageId;
+    }
+
+    // Toggle thinking section
+    function toggleThinking(messageId) {
+        const content = document.getElementById(`${messageId}-thinking-content`);
+        const header = content.previousElementSibling;
+        content.classList.toggle('expanded');
+        header.classList.toggle('expanded');
+    }
+
+    // Toggle sources section
+    function toggleSources(messageId) {
+        const content = document.getElementById(`${messageId}-sources-content`);
+        const header = content.previousElementSibling;
+        content.classList.toggle('expanded');
+        header.classList.toggle('expanded');
+    }
+
+    // Handle streaming events
+    function handleStreamEvent(messageId, data) {
+        const messageDiv = document.getElementById(messageId);
+        if (!messageDiv) return;
+
+        switch (data.type) {
+            case 'status':
+                const statusEl = messageDiv.querySelector('.stream-status');
+                if (statusEl) statusEl.textContent = data.text;
+                break;
+
+            case 'sources':
+                // Sources go to sources section
+                const kbContainer = document.querySelector(`#${messageId} .kb-sources-container`);
+                if (kbContainer) renderKBSources(messageId, data.data);
+                break;
+
+            case 'web_sources':
+                // Web sources go to sources section
+                const webContainer = document.querySelector(`#${messageId} .web-sources-container`);
+                if (webContainer) renderWebSources(messageId, data.data);
+                break;
+
+            case 'answer_start':
+                // Hide loading animation when answer starts
+                const loadingEl = messageDiv.querySelector('.thinking-rings');
+                if (loadingEl) loadingEl.style.display = 'none';
+                const statusEl2 = messageDiv.querySelector('.stream-status');
+                if (statusEl2) statusEl2.style.display = 'none';
+
+                // Hide thinking and sources sections initially using the parent wrapper
+                const thinkingSection = document.getElementById(`${messageId}-thinking`);
+                const sourcesSection = document.getElementById(`${messageId}-sources`);
+                if (thinkingSection) {
+                    thinkingSection.classList.add('collapsed');
+                    thinkingSection.classList.remove('expanded');
+                }
+                if (sourcesSection) {
+                    sourcesSection.classList.add('collapsed');
+                    sourcesSection.classList.remove('expanded');
+                }
+
+                const answerEl = messageDiv.querySelector('.answer-content');
+                if (answerEl) answerEl.innerHTML = '';
+                break;
+
+            case 'answer_chunk':\n                // Parse the chunk and separate thinking from final answer\n                const currentAnswer = messageDiv.querySelector('.answer-content');\n                const thinkingContentEl = document.getElementById(`${messageId}-thinking-content`);\n                \n                const currentData = data.text || '';\n                \n                // Check if this chunk contains THOUGHTS markers\n                if (currentData.includes('<THOUGHTS>') || currentData.includes('<thoughts>')) {\n                    const thoughtsMatch = currentData.match(/<THOUGHTS>([\s\S]*?)<\/THOUGHTS>/i);\n                    const rawThoughtsMatch = currentData.match(/<thoughts>([\s\S]*?)<\/thoughts>/i);\n                    const thoughtsMatchFinal = thoughtsMatch || rawThoughtsMatch;\n                    \n                    if (thoughtsMatchFinal) {\n                        if (thinkingContentEl) {\n                            thinkingContentEl.innerHTML += escapeHtml(thoughtsMatchFinal[1]);\n                            thinkingContentEl.classList.add('collapsed');\n                            thinkingContentEl.classList.remove('expanded');\n                        }\n                        \n                        const finalMatch = currentData.match(/<FINAL_ANSWER>([\s\S]*?)<\/FINAL_ANSWER>/i);\n                        const rawFinalMatch = currentData.match(/<final_answer>([\s\S]*?)<\/final_answer>/i);\n                        const finalMatchFinal = finalMatch || rawFinalMatch;\n                        \n                        if (finalMatchFinal && currentAnswer) {\n                            currentAnswer.innerHTML += escapeHtml(finalMatchFinal[1]);\n                        }\n                    } else {\n                        if (currentAnswer && currentAnswer.innerHTML.length === 0) {\n                            if (thinkingContentEl) {\n                                thinkingContentEl.innerHTML += escapeHtml(currentData);\n                            }\n                        } else if (currentAnswer) {\n                            currentAnswer.innerHTML += escapeHtml(currentData);\n                        }\n                    }\n                } else if (currentData.includes('<FINAL_ANSWER>') || currentData.includes('<final_answer>')) {\n                    const finalMatch = currentData.match(/<FINAL_ANSWER>([\s\S]*?)<\/FINAL_ANSWER>/i);\n                    const rawFinalMatch = currentData.match(/<final_answer>([\s\S]*?)<\/final_answer>/i);\n                    const finalMatchFinal = finalMatch || rawFinalMatch;\n                    \n                    if (finalMatchFinal && currentAnswer) {\n                        currentAnswer.innerHTML += escapeHtml(finalMatchFinal[1]);\n                    }\n                } else {\n                    if (thinkingContentEl && thinkingContentEl.innerHTML.length > 0 && (!currentAnswer || currentAnswer.innerHTML.length === 0)) {\n                        thinkingContentEl.innerHTML += escapeHtml(currentData);\n                    } else if (currentAnswer) {\n                        currentAnswer.innerHTML += escapeHtml(currentData);\n                    }\n                }\n                \n                scrollToBottom();\n                break;
+
+            case 'done':
+                // Parse markdown after all chunks received
+                const finalEl = messageDiv.querySelector('.answer-content');
+                if (finalEl && finalEl.innerHTML) {
+                    finalEl.innerHTML = marked.parse(finalEl.textContent);
+                }
+                // Collapse thinking and sources after answer complete
+                const thinkingSection = document.getElementById(`${messageId}-thinking`);
+                const sourcesSection = document.getElementById(`${messageId}-sources`);
+                if (thinkingSection) {
+                    thinkingSection.classList.remove('expanded');
+                    thinkingSection.classList.add('collapsed');
+                }
+                if (sourcesSection) {
+                    sourcesSection.classList.remove('expanded');
+                    sourcesSection.classList.add('collapsed');
+                }
+                break;
+
+            case 'error':
+                updateStreamingMessage(messageId, 'error', data.text);
+                break;
+        }
+    }
+
+    // Render thinking content
+    function renderThinking(messageId, thinkingContent) {
+        const thinkingContainer = document.getElementById(`${messageId}-thinking-content`);
+        if (thinkingContainer) {
+            // Parse markdown in thinking
+            thinkingContainer.innerHTML = marked.parse(escapeHtml(thinkingContent));
+            thinkingContainer.classList.remove('collapsed');
+        }
+    }
+
+    // Render KB sources
+    function renderKBSources(messageId, sources) {
+        const container = document.querySelector(`#${messageId} .kb-sources-container`);
+        if (!container || !sources || sources.length === 0) return;
+
+        let html = '<p class="text-xs text-gray-500 uppercase tracking-wider mb-2 font-semibold">📎 Knowledge Base</p><div class="flex flex-wrap gap-2">';
+        sources.forEach(s => {
+            html += `<span class="source-badge bg-gradient-to-r from-blue-900/30 to-blue-800/30 text-blue-300 text-xs rounded-full px-3 py-1.5 flex items-center gap-1 border border-blue-700/50">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                ${s.document} (Page ${s.page})
+
+    // Render KB sources
+    function renderKBSources(messageId, sources) {
+        const container = document.querySelector(`#${messageId} .kb-sources-container`);
+        if (!container || !sources || sources.length === 0) return;
+
+        let html = '<p class="text-xs text-gray-500 uppercase tracking-wider mb-2 font-semibold">📎 Knowledge Base</p><div class="flex flex-wrap gap-2">';
+        sources.forEach(s => {
+            html += `<span class="source-badge bg-gradient-to-r from-blue-900/30 to-blue-800/30 text-blue-300 text-xs rounded-full px-3 py-1.5 flex items-center gap-1 border border-blue-700/50">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                ${s.document} (Page ${s.page})
+            </span>`;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    // Render web sources
+    function renderWebSources(messageId, sources) {
+        const container = document.querySelector(`#${messageId} .web-sources-container`);
+        if (!container || !sources || sources.length === 0) return;
+
+        let html = '<p class="text-xs text-gray-500 uppercase tracking-wider mb-2 font-semibold">🌐 Official Web Sources</p><div class="flex flex-wrap gap-2">';
+        sources.forEach(s => {
+            const domain = extractDomain(s.url);
+            html += `<a href="${s.url}" target="_blank" class="source-badge bg-gradient-to-r from-purple-900/30 to-blue-900/30 text-purple-300 text-xs rounded-full px-3 py-1.5 flex items-center gap-1 border border-purple-700/50 hover:border-purple-500/50">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                </svg>
+                ${domain}
+            </a>`;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    // Show fallback banner
+    function showFallbackBanner(messageId) {
+        const container = document.querySelector(`#${messageId} .fallback-banner-container`);
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="bg-gradient-to-r from-amber-900/30 to-orange-900/30 border border-amber-700/50 text-amber-400 text-xs rounded-xl px-4 py-3">
+                ⚡ Knowledge base expanded with live official web search.
+            </div>
+        `;
+    }
+
+    // Update streaming message
+    function updateStreamingMessage(messageId, type, text) {
+        const messageDiv = document.getElementById(messageId);
+        if (!messageDiv) return;
+
+        if (type === 'error') {
+            messageDiv.querySelector('.answer-content').innerHTML = `<p class="text-red-400">${escapeHtml(text)}</p>`;
+        }
+    }
+
+    // Extract domain from URL
+    function extractDomain(url) {
+        try {
+            const urlObj = new URL(url);
+            return urlObj.hostname.replace('www.', '');
+        } catch {
+            return url;
+        }
+    }
+
+    // Escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Scroll to bottom
+    function scrollToBottom() {
+        const container = document.getElementById('chat-container');
+        container.scrollTop = container.scrollHeight;
+    }
+
+    // Add message to chat
+    function addMessage(type, content, sources = [], usedWebFallback = false) {
+        const container = document.getElementById('chat-messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'chat-bubble';
+
+        if (type === 'user') {
+            messageDiv.innerHTML = `
+                <div class="flex justify-end mb-6">
+                    <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl rounded-br-md px-5 py-3 max-w-[80%] md:max-w-[70%] shadow-lg shadow-blue-500/25">
+                        <p class="text-sm">${escapeHtml(content)}</p>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Parse markdown
+            const parsedContent = marked.parse(content);
+
+            let sourcesHtml = '';
+            if (sources && sources.length > 0) {
+                sourcesHtml = `
+                    <div class="mt-4 pt-3 border-t border-white/10">
+                        <p class="text-xs text-gray-500 uppercase tracking-wider mb-2 font-semibold">Sources</p>
+                        <div class="flex flex-wrap gap-2">
+                            ${sources.map(s => {
+                                if (s.type === 'web') {
+                                    const domain = extractDomain(s.url);
+                                    return `<a href="${s.url}" target="_blank" class="source-badge bg-gradient-to-r from-purple-900/30 to-blue-900/30 text-purple-300 text-xs rounded-full px-3 py-1.5 flex items-center gap-1 border border-purple-700/50 hover:border-purple-500/50">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                        </svg>
+                                        ${domain}
+                                    </a>`;
+                                } else {
+                                    return `<span class="source-badge bg-gray-800 text-gray-300 text-xs rounded-full px-3 py-1.5 flex items-center gap-1 border border-gray-700/50">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                        ${s.document} (Page ${s.page})
+                                    </span>`;
+                                }
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            let fallbackHtml = '';
+            if (usedWebFallback) {
+                fallbackHtml = `
+                    <div class="mt-3 bg-gradient-to-r from-amber-900/30 to-orange-900/30 border border-amber-700/50 text-amber-400 text-xs rounded-xl px-4 py-3">
+                        ⚡ Knowledge base expanded with live official web search.
+                    </div>
+                `;
+            }
+
+            messageDiv.innerHTML = `
+                <div class="flex justify-start mb-6">
+                    <div class="bg-gradient-to-br from-dark-card to-dark-bg border border-white/10 text-gray-100 rounded-2xl rounded-bl-md px-5 py-4 max-w-[90%] md:max-w-[85%] shadow-xl shadow-black/30">
+                        <div class="markdown-content text-sm leading-relaxed">${parsedContent}</div>
+                        ${fallbackHtml}
+                        ${sourcesHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        container.appendChild(messageDiv);
+        scrollToBottom();
+    }
+
+    // Form submission
+    document.getElementById('question-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const question = textarea.value.trim();
+        if (!question || isLoading) return;
+
+        // Clear input
+        textarea.value = '';
+        textarea.style.height = 'auto';
+
+        // Disable button
+        isLoading = true;
+        document.getElementById('send-button').disabled = true;
+
+        // Hide welcome message
+        document.getElementById('welcome-message').style.display = 'none';
+
+        // Add user message
+        addMessage('user', question);
+
+        // Add streaming AI message
+        const messageId = addStreamingMessage();
+
+        try {
+            const response = await fetch('{% url "ask_question_stream" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    question: question,
+                    region: selectedRegion || null
+                })
+            });
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    if (!line.trim()) continue;
+
+                    try {
+                        const data = JSON.parse(line);
+                        handleStreamEvent(messageId, data);
+                    } catch (e) {
+                        console.error('Parse error:', e);
+                    }
+                }
+            }
+
+            // Finalize streaming message
+            finalizeStreamingMessage(messageId);
+
+        } catch (error) {
+            updateStreamingMessage(messageId, 'error', 'Sorry, a network error occurred. Please try again.');
+        }
+
+        // Re-enable button
+        isLoading = false;
+        document.getElementById('send-button').disabled = false;
+
+        // Scroll to bottom
+        scrollToBottom();
+    });
+
+    // Finalize streaming message
+    function finalizeStreamingMessage(messageId) {
+        const statusEl = document.querySelector(`#${messageId} .stream-status`);
+        if (statusEl) statusEl.style.display = 'none';
+    }
+</script>
+{% endblock %}

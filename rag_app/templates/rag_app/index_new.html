@@ -1,0 +1,230 @@
+{% extends 'rag_app/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="z-layout">
+
+<!-- ============================================================
+     LEFT SIDEBAR
+     ============================================================ -->
+{% include 'rag_app/partials/_sidebar.html' %}
+
+<!-- ============================================================
+     MAIN CHAT AREA
+     ============================================================ -->
+<div id="main-chat"
+     class="z-main-chat"
+     role="main"
+     aria-label="Chat area">
+
+    <!-- Context Toolbar -->
+    <div class="z-context-toolbar" role="status" aria-label="Current context">
+        <span id="toolbar-region" class="z-toolbar-item">Region: India</span>
+        <span class="z-toolbar-sep" aria-hidden="true">&bull;</span>
+        <span id="toolbar-kb" class="z-toolbar-item">KB: {{ stats.total_documents }} docs</span>
+        <span class="z-toolbar-sep" aria-hidden="true">&bull;</span>
+        <span id="toolbar-doc" class="z-toolbar-item">No document attached</span>
+    </div>
+
+    <!-- Chat Messages Container -->
+    <div id="chat-container" class="z-chat-scroll">
+        <div class="z-chat-inner">
+            <!-- Welcome Screen -->
+            <div id="welcome-message" class="z-welcome">
+                <div class="z-welcome-grid">
+                    <!-- Quick Start -->
+                    <div class="z-welcome-panel">
+                        <h2 class="z-welcome-title">Quick Start</h2>
+                        <div class="z-quick-start-list">
+                            <button class="z-quick-start-item"
+                                    data-query="What is HS code for apple export to USA?">
+                                <span class="z-quick-start-icon">🔍</span>
+                                <span class="z-quick-start-text">HS Code Lookup</span>
+                            </button>
+                            <button class="z-quick-start-item"
+                                    data-query="Duty rate for mango export to UAE">
+                                <span class="z-quick-start-icon">📊</span>
+                                <span class="z-quick-start-text">Duty Rates</span>
+                            </button>
+                            <button class="z-quick-start-item"
+                                    data-query="Export procedure for grapes to EU step by step">
+                                <span class="z-quick-start-icon">📋</span>
+                                <span class="z-quick-start-text">Export Procedure</span>
+                            </button>
+                            <button class="z-quick-start-item"
+                                    data-query="Phytosanitary certificate requirements for mango">
+                                <span class="z-quick-start-icon">📄</span>
+                                <span class="z-quick-start-text">Certificates</span>
+                            </button>
+                            <button class="z-quick-start-item"
+                                    data-query="Compare duty rates for wheat between India and USA">
+                                <span class="z-quick-start-icon">⚖️</span>
+                                <span class="z-quick-start-text">Compare Regions</span>
+                            </button>
+                            <button class="z-quick-start-item"
+                                    data-query="Latest export regulations for organic spices to EU 2025">
+                                <span class="z-quick-start-icon">🌐</span>
+                                <span class="z-quick-start-text">Web Search</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- KB Status -->
+                    <div class="z-welcome-panel z-welcome-panel--status">
+                        <h2 class="z-welcome-title">Knowledge Base</h2>
+                        <div class="z-kb-stats-grid">
+                            <div class="z-kb-stat">
+                                <span class="z-kb-stat-value">{{ stats.total_documents }}</span>
+                                <span class="z-kb-stat-label">Documents</span>
+                            </div>
+                            <div class="z-kb-stat">
+                                <span class="z-kb-stat-value">{{ stats.total_pages }}</span>
+                                <span class="z-kb-stat-label">Pages</span>
+                            </div>
+                            <div class="z-kb-stat">
+                                <span class="z-kb-stat-value">{{ stats.total_facts }}</span>
+                                <span class="z-kb-stat-label">Facts</span>
+                            </div>
+                            <div class="z-kb-stat">
+                                <span class="z-kb-stat-value">{{ stats.regions.india }} / {{ stats.regions.us }} / {{ stats.regions.eu }}</span>
+                                <span class="z-kb-stat-label">India / USA / EU</span>
+                            </div>
+                        </div>
+                        <p class="z-kb-last-updated">Last indexed: recently</p>
+                        {% if stats.total_documents == 0 %}
+                        <button type="button" class="z-upload-prompt-btn" id="welcome-upload-btn">
+                            Upload First Document
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Messages -->
+            <div id="chat-messages"
+                 class="z-chat-messages"
+                 role="log"
+                 aria-live="polite"
+                 aria-atomic="false">
+            </div>
+        </div>
+    </div>
+
+    <!-- Command Bar (Input) -->
+    <div class="z-command-bar" role="contentinfo" aria-label="Message input">
+        <div class="z-command-bar-inner">
+            <!-- Region selector -->
+            <div class="z-command-region" role="group" aria-label="Select region">
+                <select id="command-region-select"
+                        class="z-command-select"
+                        aria-label="Select region for your question">
+                    <option value="india">🇮🇳 India</option>
+                    <option value="us">🇺🇸 USA</option>
+                    <option value="eu">🇪🇺 EU</option>
+                    <option value="">🌐 All Regions</option>
+                </select>
+            </div>
+
+            <!-- Input Row -->
+            <form id="question-form"
+                  method="POST"
+                  data-stream-url="{% url 'ask_question_stream' %}"
+                  class="z-command-form"
+                  aria-label="Ask a trade compliance question">
+                {% csrf_token %}
+
+                <!-- Suggestion Box -->
+                <div id="suggestion-box"
+                     class="z-suggestion-box"
+                     role="listbox"
+                     aria-label="Query suggestions"
+                     aria-expanded="false">
+                </div>
+
+                <!-- Input Row -->
+                <div class="z-input-row">
+                    <label for="question-input" class="z-sr-only">Your question</label>
+                    <textarea
+                        id="question-input"
+                        rows="1"
+                        placeholder="Ask about trade compliance, HS codes, duty rates..."
+                        class="z-textarea"
+                        aria-describedby="input-help"
+                    ></textarea>
+                    <span id="input-help" class="z-sr-only">Press Enter to send, Shift+Enter for new line</span>
+
+                    <!-- Attach button -->
+                    <button type="button"
+                            id="attach-button"
+                            class="z-icon-btn"
+                            aria-label="Attach a document"
+                            title="Attach document (PDF, PNG, JPG)"
+                            onclick="document.getElementById('file-input').click()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                        </svg>
+                    </button>
+
+                    <input type="file"
+                           id="file-input"
+                           hidden
+                           accept=".pdf,.png,.jpg,.jpeg"
+                           aria-hidden="true">
+
+                    <!-- Send button -->
+                    <button type="submit"
+                            id="send-button"
+                            class="z-icon-btn z-send-btn"
+                            aria-label="Send question">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"/>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Context indicators -->
+            <div class="z-command-indicators" role="status" aria-live="polite">
+                <span id="command-status" class="z-command-status"></span>
+            </div>
+        </div>
+
+        <!-- Attached file display -->
+        <div id="attached-file-display"
+             class="z-attached-file"
+             style="display:none;"
+             role="status"
+             aria-label="Attached document">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1rem;height:1rem;flex-shrink:0;">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <span id="attached-file-name" class="z-attached-file-name"></span>
+            <button type="button"
+                    class="z-attached-file-remove"
+                    aria-label="Remove attached file"
+                    onclick="window._clearAttachedFile()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     RIGHT CONTEXT PANEL
+     ============================================================ -->
+{% include 'rag_app/partials/_context_panel.html' %}
+
+</div>
+
+<!-- App Scripts -->
+<script src="{% static 'rag_app/js/chat.js' %}"></script>
+<script src="{% static 'rag_app/js/sidebar.js' %}"></script>
+<script src="{% static 'rag_app/js/context-panel.js' %}"></script>
+
+{% endblock %}
