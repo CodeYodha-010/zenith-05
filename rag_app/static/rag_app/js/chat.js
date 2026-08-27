@@ -398,7 +398,10 @@
             case 'done': {
                 const finalEl = messageDiv.querySelector('.z-answer-content');
                 if (finalEl && finalEl.innerHTML) {
+                    // Soft crossfade: dip opacity one frame, swap to parsed markdown, fade back in
+                    finalEl.classList.add('z-content-swap');
                     finalEl.innerHTML = DOMPurify.sanitize(marked.parse(finalEl.textContent));
+                    requestAnimationFrame(() => finalEl.classList.remove('z-content-swap'));
                 }
                 clearCommandStatus();
                 break;

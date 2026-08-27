@@ -1,0 +1,84 @@
+/* ============================================================
+   Zenith Motion Layer (Phase 3) — Spec §5
+   Loaded AFTER chat.css so these rules win ties.
+   Honors prefers-reduced-motion via tokens.css global kill-switch.
+   ============================================================ */
+
+/* --- A. MESSAGE ENTRANCES (spec §5.3: start at scale(0.95), never 0) --- */
+
+.z-message-ai .z-message-bubble {
+    /* Compliance card gets a subtle depth pop layered over the row slide */
+    animation: z-scale-in var(--duration-emphasized) var(--ease-out);
+}
+
+/* Respect the theme's duration/easing tokens instead of hardcoded values */
+.z-message {
+    animation-duration: var(--duration-smooth);
+    animation-timing-function: var(--ease-out);
+}
+
+/* --- B. THINKING DOTS on streaming status text --- */
+.z-stream-status:not(:empty)::after {
+    content: '';
+    display: inline-block;
+    width: 1.25em;
+    text-align: left;
+    animation: z-thinking-dots 1.4s steps(4, end) infinite;
+}
+
+@keyframes z-thinking-dots {
+    0%  { content: ''; }
+    25% { content: '.'; }
+    50% { content: '..'; }
+    75% { content: '...'; }
+    100% { content: ''; }
+}
+
+/* --- C. SOURCE PILLS — staggered clip-reveal (spec §5.5D) ---
+   Runs automatically whenever pills are inserted into the DOM,
+   both on initial card render and after stream-done re-render. */
+.z-source-pill {
+    animation: z-clip-reveal var(--duration-standard) var(--ease-out) both;
+}
+
+.z-source-pills > :nth-child(1) { animation-delay: 40ms; }
+.z-source-pills > :nth-child(2) { animation-delay: 80ms; }
+.z-source-pills > :nth-child(3) { animation-delay: 120ms; }
+.z-source-pills > :nth-child(4) { animation-delay: 160ms; }
+.z-source-pills > :nth-child(5) { animation-delay: 200ms; }
+.z-source-pills > :nth-child(6) { animation-delay: 240ms; }
+.z-source-pills > :nth-child(n+7) { animation-delay: 280ms; }
+
+/* --- D. MARKDOWN CROSSFADE on stream completion ---
+   chat.js toggles .z-content-swap for one frame when swapping raw
+   chunks -> parsed markdown, producing a soft 160ms fade instead
+   of a hard flicker (spec §6.3 regenerate/crossfade pattern). */
+.z-answer-content {
+    transition: opacity var(--duration-quick) var(--ease-out);
+}
+
+.z-content-swap {
+    opacity: 0;
+}
+
+/* Answer content enters softly the first time it appears */
+@keyframes z-answer-enter {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.z-answer-content {
+    animation: z-answer-enter var(--duration-standard) var(--ease-out);
+}
+
+/* --- E. ERROR SHAKE for network failures (semantic motion) --- */
+@keyframes z-error-shake {
+    10%, 90% { transform: translateX(-1px); }
+    20%, 80% { transform: translateX(2px); }
+    30%, 50%, 70% { transform: translateX(-3px); }
+    40%, 60% { transform: translateX(3px); }
+}
+
+.z-error-bubble {
+    animation: z-error-shake 0.4s var(--ease-out);
+}
