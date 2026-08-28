@@ -835,4 +835,36 @@
         alert('Statistics feature would open a modal with KB stats.\n\nDocuments: {{ stats.total_documents }}\nPages: {{ stats.total_pages }}\nFacts: {{ stats.total_facts }}');
     };
 
+    // ============================================================
+    //  KB STAT COUNT-UP (Spec §5.5E) — welcome screen only
+    //  Animates numeric [data-count] stat values in once on load.
+    // ============================================================
+    function runStatCountUp() {
+        const els = document.querySelectorAll('.z-kb-stat-value[data-count]');
+        if (!els.length) return;
+        // Respect reduced motion: jump straight to the final value.
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            els.forEach((el) => { el.textContent = el.dataset.count; });
+            return;
+        }
+        const duration = 800; // matches spec §5.5E (800ms, ease-out-expo)
+        const easeOutExpo = function (t) {
+            return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+        };
+        els.forEach((el) => {
+            const target = parseInt(el.dataset.count, 10);
+            if (isNaN(target)) return;
+            const start = performance.now();
+            function tick(now) {
+                const p = Math.min(1, (now - start) / duration);
+                el.textContent = Math.round(easeOutExpo(p) * target).toLocaleString();
+                if (p < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        });
+    }
+
+    // Fonts may load after; welcome stats are in initial DOM, so run directly.
+    runStatCountUp();
+
 })();

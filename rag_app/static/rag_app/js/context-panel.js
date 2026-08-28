@@ -27,12 +27,48 @@
         return div.innerHTML;
     }
 
+    // ---- Context Tabs (Spec §7.4) ----
+    const contextTabs = Array.prototype.slice.call(document.querySelectorAll('.z-context-tab'));
+    const TAB_TO_VIEW = {
+        source:   'context-source-view',
+        document: 'context-document-view',
+        data:     'context-data-view',
+        related:  'context-related-view',
+    };
+    const VIEW_TO_TAB = {
+        'context-source-view':   'source',
+        'context-document-view': 'document',
+        'context-data-view':     'data',
+        'context-related-view':  'related',
+    };
+
+    function setActiveTab(activeName) {
+        contextTabs.forEach((tab) => {
+            const isActive = tab.dataset.contextTab === activeName;
+            tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+    }
+
+    contextTabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+            const name = tab.dataset.contextTab;
+            const viewId = TAB_TO_VIEW[name];
+            if (!viewId) return;
+            // Tabs can be clicked even while the panel is closed; open it.
+            openPanel();
+            showView(viewId);
+            setActiveTab(name);
+        });
+    });
+
     function showView(viewId) {
         [contextEmptyState, contextSourceView, contextDocView, contextDataView, contextRelatedView].forEach((view) => {
             if (view) view.style.display = 'none';
         });
         const target = document.getElementById(viewId);
         if (target) target.style.display = 'block';
+        // Sync the tab pills (spec §7.4)
+        setActiveTab(VIEW_TO_TAB[viewId] || '');
     }
 
     function openPanel() {

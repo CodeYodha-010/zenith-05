@@ -1,0 +1,113 @@
+/* ============================================================
+   Zenith Components Layer (Phase 4) — Spec §7
+   Loaded AFTER tokens/glass/chat/animations so overrides win safely.
+   ============================================================ */
+
+/* --- §7.2 CHAT COMPLIANCE CARD — left accent gradient bar ---
+   Positions a 3px gradient strip (accent -> info) down the left
+   edge of every AI answer card, matching the spec diagram. */
+.z-compliance-card {
+    position: relative;
+    padding-left: 0.875rem;
+}
+
+.z-compliance-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.25rem;
+    bottom: 0.25rem;
+    width: 3px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(180deg, var(--color-accent), var(--color-info));
+    opacity: 0.85;
+    pointer-events: none;
+}
+
+/* --- §7.5 WELCOME — staggered entrance (spec §5.5E) ---
+   Runs once on page load; sequence ~600ms total, respects reduced-motion. */
+.z-welcome-panel {
+    animation: z-slide-up var(--duration-emphasized) var(--ease-out) both;
+}
+
+#welcome-message .z-welcome-grid > :nth-child(1) { animation-delay: 100ms; }
+#welcome-message .z-welcome-grid > :nth-child(2) { animation-delay: 180ms; }
+
+.z-kb-stat {
+    animation: z-scale-in var(--duration-emphasized) var(--ease-out) both;
+}
+.z-kb-stat:nth-child(1) { animation-delay: 240ms; }
+.z-kb-stat:nth-child(2) { animation-delay: 280ms; }
+.z-kb-stat:nth-child(3) { animation-delay: 320ms; }
+.z-kb-stat:nth-child(4) { animation-delay: 360ms; }
+
+/* Quick-start items lift on hover (fine pointers only) */
+@media (hover: hover) and (pointer: fine) {
+    .z-quick-start-item:hover {
+        transform: translateY(-1px);
+        border-color: var(--color-accent-border);
+        background: var(--color-accent-dim);
+    }
+}
+
+/* --- §7.4 CONTEXT PANEL — tab pills --- */
+.z-context-tabs {
+    display: flex;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-3) 0;
+    border-bottom: 1px solid var(--color-border-subtle);
+    margin-bottom: var(--space-2);
+}
+
+.z-context-tab {
+    appearance: none;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-full);
+    color: var(--color-text-muted);
+    font-family: var(--font-ui);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    padding: var(--space-1) var(--space-3);
+    cursor: pointer;
+    transition:
+        color var(--duration-quick) var(--ease-out),
+        background var(--duration-quick) var(--ease-out),
+        border-color var(--duration-quick) var(--ease-out);
+}
+
+.z-context-tab:hover {
+    color: var(--color-text-secondary);
+    background: var(--color-bg-elevated);
+}
+
+.z-context-tab[aria-selected="true"] {
+    color: var(--color-accent);
+    background: var(--color-accent-dim);
+    border-color: var(--color-accent-border);
+}
+
+/* --- §7.3 COMMAND BAR — glassmorphic polish on the region selector --- */
+.z-command-select {
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-full);
+    color: var(--color-text-secondary);
+    font-family: var(--font-ui);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    padding: var(--space-1) var(--space-3);
+    transition:
+        border-color var(--duration-quick) var(--ease-out),
+        box-shadow var(--duration-quick) var(--ease-out);
+}
+
+.z-command-select:hover {
+    border-color: var(--color-accent-border);
+}
+
+.z-command-select:focus-visible {
+    outline: none;
+    border-color: var(--color-accent-border);
+    box-shadow: var(--shadow-focus);
+}

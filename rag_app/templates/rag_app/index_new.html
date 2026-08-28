@@ -75,17 +75,17 @@
                         <h2 class="z-welcome-title">Knowledge Base</h2>
                         <div class="z-kb-stats-grid">
                             <div class="z-kb-stat">
-                                <span class="z-kb-stat-value">{{ stats.total_documents }}</span>
-                                <span class="z-kb-stat-label">Documents</span>
-                            </div>
+    <span class="z-kb-stat-value" data-count="{{ stats.total_documents }}">{{ stats.total_documents }}</span>
+    <span class="z-kb-stat-label">Documents</span>
+</div>
                             <div class="z-kb-stat">
-                                <span class="z-kb-stat-value">{{ stats.total_pages }}</span>
-                                <span class="z-kb-stat-label">Pages</span>
-                            </div>
+    <span class="z-kb-stat-value" data-count="{{ stats.total_pages }}">{{ stats.total_pages }}</span>
+    <span class="z-kb-stat-label">Pages</span>
+</div>
                             <div class="z-kb-stat">
-                                <span class="z-kb-stat-value">{{ stats.total_facts }}</span>
-                                <span class="z-kb-stat-label">Facts</span>
-                            </div>
+    <span class="z-kb-stat-value" data-count="{{ stats.total_facts }}">{{ stats.total_facts }}</span>
+    <span class="z-kb-stat-label">Facts</span>
+</div>
                             <div class="z-kb-stat">
                                 <span class="z-kb-stat-value">{{ stats.regions.india }} / {{ stats.regions.us }} / {{ stats.regions.eu }}</span>
                                 <span class="z-kb-stat-label">India / USA / EU</span>
