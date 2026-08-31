@@ -1,0 +1,323 @@
+/* ============================================================
+   ZENITH REFRESH — final cascade override layer
+   Loaded LAST in base.html. Re-themes the chat to the landing
+   page brand (warm ink + gold, Form Z-1) without touching
+   chat.css / glass.css / any JavaScript.
+   Rollback: remove this <link> from base.html.
+   ============================================================ */
+
+/* ---------- 1. Overriding chat.css's hardcoded --z-* palette ---------- */
+:root {
+    --z-bg:             #050505;
+    --z-surface:        #0d0b08;
+    --z-surface-2:      #14110c;
+    --z-surface-3:      #1a160f;
+    --z-border:         rgba(245, 241, 232, 0.10);
+    --z-border-hover:   rgba(245, 241, 232, 0.22);
+    --z-text-primary:   #f5f1e8;
+    --z-text-secondary: rgba(245, 241, 232, 0.65);
+    --z-text-muted:     rgba(245, 241, 232, 0.40);
+    --z-accent:         #e8a23a;
+    --z-accent-hover:   #f0b45a;
+    --z-accent-dim:     rgba(232, 162, 58, 0.10);
+    --z-accent-border:  rgba(232, 162, 58, 0.35);
+    --z-teal:           #e8a23a;
+    --z-teal-dim:       rgba(232, 162, 58, 0.10);
+    --z-teal-border:    rgba(232, 162, 58, 0.35);
+    --z-error:          #d96c5f;
+    --z-error-dim:      rgba(217, 108, 95, 0.12);
+}
+
+/* Tailwind body class hardcodes #111 — re-anchor to the brand canvas */
+body.bg-z-bg {
+    background: var(--z-bg) !important;
+    color: var(--z-text-primary) !important;
+}
+
+/* ---------- 2. De-glass everything ---------- */
+.z-sidebar, .z-context-panel, .z-context-toolbar,
+.z-command-bar, .z-command-form, .z-message-bubble,
+.z-welcome-panel, .z-brand-icon, .z-suggestion-box {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* ---------- 3. Sidebar: the document masthead ---------- */
+.z-sidebar {
+    background: var(--z-surface);
+    border-right: 1px solid var(--z-border);
+}
+
+.z-brand-icon svg { width: 1.375rem; height: 1.375rem; color: var(--z-accent); }
+
+.z-brand-name {
+    font-family: 'DM Serif Display', serif;
+    font-style: italic;
+    font-size: 1.35rem;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--z-text-primary);
+}
+
+.z-brand-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.5rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--z-text-muted);
+    margin-top: 0.3rem;
+}
+
+.z-sidebar-label,
+.z-context-section-label,
+.z-context-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.5625rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--z-text-muted);
+}
+
+.z-status-dot { background: var(--z-accent); box-shadow: 0 0 0 3px rgba(232, 162, 58, 0.15); }
+
+.z-status-text,
+.z-kb-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.5625rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--z-text-muted);
+}
+
+/* Region tabs: mono codes, gold underline on active */
+.z-region-tab {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--z-border);
+    border-radius: 0;
+}
+.z-region-tab:hover { background: rgba(245, 241, 232, 0.03); border-bottom-color: var(--z-border-hover); }
+.z-region-tab::before { display: none; }
+.z-region-tab[aria-selected="true"] {
+    background: transparent;
+    border-bottom-color: var(--z-accent);
+    color: var(--z-accent);
+}
+.z-region-flag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.625rem;
+    letter-spacing: 0.2em;
+    color: var(--z-accent);
+    background: none;
+}
+.z-region-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.5625rem;
+}
+
+/* ---------- 4. Context toolbar: form header line ---------- */
+.z-context-toolbar {
+    background: var(--z-bg);
+    border-bottom: 1px solid var(--z-border);
+
+/* ---------- 5. Messages: typography blocks, no bubbles ---------- */
+.z-chat-inner {
+    max-width: 52rem;
+    margin: 0 auto;
+    padding-inline: 2.5rem;
+}
+
+.z-message { margin: 2rem 0; }
+.z-message-user { justify-content: flex-start !important; }
+.z-message-ai { justify-content: flex-start !important; }
+
+.z-message + .z-message {
+    border-top: 1px solid var(--z-border);
+    padding-top: 2rem;
+}
+
+.z-message-bubble {
+    max-width: 100% !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    font-size: 0.9375rem;
+    line-height: 1.7;
+}
+
+/* User message: quiet gold-tinted filing block */
+.z-message-user .z-message-bubble {
+    background: rgba(232, 162, 58, 0.06) !important;
+    border: 1px solid rgba(232, 162, 58, 0.16) !important;
+    border-radius: var(--z-radius-sm) !important;
+    padding: 0.875rem 1.125rem !important;
+    color: var(--z-text-primary) !important;
+}
+.z-message-user .z-message-bubble::before {
+    content: 'OPERATOR';
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.5625rem;
+    letter-spacing: 0.28em;
+    color: var(--z-accent);
+    margin-bottom: 0.5rem;
+}
+
+/* AI message: the answer, set like a document */
+.z-message-ai .z-message-bubble {
+    border-left: 1px solid var(--z-border) !important;
+    padding: 0.125rem 0 0.125rem 1.375rem !important;
+}
+.z-message-ai .z-message-bubble::before {
+    content: '\25C6  ZENITH';
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.5625rem;
+    letter-spacing: 0.28em;
+    color: var(--z-accent);
+    margin-bottom: 0.625rem;
+}
+
+/* Error state: terracotta, not a red blob */
+.z-message-bubble.z-error-bubble {
+    background: rgba(217, 108, 95, 0.07) !important;
+    border: 1px solid rgba(217, 108, 95, 0.3) !important;
+    border-radius: var(--z-radius-sm) !important;
+    padding: 0.875rem 1.125rem !important;
+}
+
+/* ---------- 6. Welcome: brand headline + ledger rows ---------- */
+.z-welcome-brand { margin-bottom: 2.5rem; }
+.z-welcome-brand-title {
+    font-family: 'DM Serif Display', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1.75rem, 3.2vw, 2.75rem);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: var(--z-text-primary);
+    margin: 0;
+}
+.z-welcome-brand-title em { font-style: italic; color: var(--z-accent); }
+.z-welcome-brand-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.5625rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--z-text-muted);
+    margin: 0.875rem 0 0;
+}
+
+.z-welcome-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.5625rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--z-text-muted);
+}
+
+.z-quick-start-item {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--z-border);
+    border-radius: 0;
+    padding: 0.8125rem 0.25rem;
+    transform: none;
+}
+.z-quick-start-item:hover {
+    background: transparent;
+    border-bottom-color: var(--z-accent);
+    transform: none;
+}
+.z-quick-start-item:active { transform: none; }
+.z-quick-start-icon {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
+    color: var(--z-accent);
+    min-width: 2.25rem;
+}
+.z-quick-start-text { font-size: 0.875rem; color: var(--z-text-secondary); }
+.z-quick-start-item:hover .z-quick-start-text { color: var(--z-text-primary); }
+
+/* ---------- 7. Input: the floating filing bar ---------- */
+.z-command-form {
+    background: var(--z-surface) !important;
+    border: 1px solid var(--z-border) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
+    transition: border-color 0.2s ease;
+}
+.z-command-form:focus-within {
+    border-color: var(--z-accent-border) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(232, 162, 58, 0.25) !important;
+}
+
+.z-textarea {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--z-text-primary);
+    caret-color: var(--z-accent);
+}
+
+.z-send-btn {
+    background: var(--z-accent) !important;
+    color: #050505 !important;
+    border-radius: 9999px !important;
+    border: none !important;
+}
+.z-send-btn:hover { background: var(--z-accent-hover) !important; }
+.z-send-btn svg { stroke: #050505; }
+
+.z-icon-btn { color: var(--z-text-muted); }
+.z-icon-btn:hover { color: var(--z-text-primary); background: var(--z-surface-2); }
+
+/* ---------- 8. Thinking / streaming: quiet mono status ---------- */
+.z-stream-status,
+.z-loading-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.5625rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--z-text-muted);
+}
+.z-loading-animation > * { background: var(--z-accent) !important; }
+
+/* ---------- 9. Context panel: solid, ruled ---------- */
+.z-context-panel {
+    background: var(--z-surface);
+    border-left: 1px solid var(--z-border);
+}
+
+.z-context-tab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.5625rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+}
+
+/* ---------- 10. Attached-file chip + scrollbar ---------- */
+.z-attached-file {
+    background: var(--z-surface);
+    border: 1px solid var(--z-accent-border);
+    border-radius: var(--z-radius-sm);
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: rgba(245, 241, 232, 0.14); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(245, 241, 232, 0.28); }
+
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.5625rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--z-text-muted);
+    padding: 0.75rem 1.5rem;
+}
+.z-context-toolbar::before {
+    content: 'FORM Z-1 \00B7';
+    color: var(--z-accent);
+    margin-right: 0.75em;
+}
