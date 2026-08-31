@@ -16,13 +16,14 @@ Scoring:
 import json
 import logging
 import math
+import os
 import re
 from typing import List, Dict, Tuple
 
 import numpy as np
 
 from django.http import JsonResponse, StreamingHttpResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.db.models import Q
@@ -43,6 +44,7 @@ from .services.service_registry import (
 from .retrieval_service import _multi_source_retrieve
 from .prompts import SYSTEM_PROMPT
 from .tariff_disclaimers import get_tariff_disclaimer, is_tariff_query
+from .api_auth import require_login_json
 
 logger = logging.getLogger('rag_pipeline')
 
@@ -113,121 +115,24 @@ def _get_semantic_score(query: str, texts: List[str]) -> List[float]:
 
 
 # ============================================================================
-# 4-SOURCE RETRIEVAL PIPELINE
+# 4-SOURCE RETRIEVAL PIPELINE - lives in retrieval_service.py now.
+# _multi_source_retrieve is imported at the top of this module. A former
+# local stub here fell through without a return (None), which raised
+# TypeError: cannot unpack non-iterable NoneType on /search/. Removed.
 # ============================================================================
-
-def _multi_source_retrieve(query: str, region: str, understood: Dict) -> Tuple:
-    """
-    Multi-source retrieval:
-    1. DocumentMetadata — find relevant docs by topics/commodities
-    2. FactIndex — find structured facts matching the query
-    3. SearchIndex chunks — FAISS similarity search
-    4. SearchIndex summaries — quick scan
-
-    Returns: (pages_list, sources_list, scores_list, kb_context_string)
-    """
-    query_lower = query.lower()
-    expanded_terms = understood.get('expanded_terms', [])
-    fact_types = understood.get('fact_types', [])
-    likely_docs = understood.get('likely_documents', [])
-
-    # ── SOURCE 1: DocumentMetadata ──
-    relevant_doc_ids = set()
-    metadata_context = ""
-
-    # Search by topics
-    for topic in understood.get('topics', []):
-        metas = DocumentMetadata.objects.filter(
-            topics__icontains=topic
-        ).select_related('document')
-        if region and region in ('eu', 'india', 'us'):
-            metas = metas.filter(document__region=region)
-        for m in metas:
-            relevant_doc_ids.add(m.document_id)
-            metadata_context += f"Document: {m.document.title}\n"
-            if m.summary:
-                metadata_context += f"Overview: {m.summary[:300]}\n"
-            if m.key_facts:
-                try:
-                    facts = json.loads(m.key_facts)
-                    for k, v in list(facts.items())[:3]:
-                        metadata_context += f"Key fact: {k} = {v}\n"
-                except:
-                    pass
-            metadata_context += "---\n"
-
-    # Search by commodities
-    for commodity in understood.get('commodities', []):
-        metas = DocumentMetadata.objects.filter(
-            commodities__icontains=commodity
-        ).select_related('document')
-        if region and region in ('eu', 'india', 'us'):
-            metas = metas.filter(document__region=region)
-        for m in metas:
-            relevant_doc_ids.add(m.document_id)
-
-    # ── SOURCE 2: FactIndex — structured facts ──
-    fact_results = []
-
-    # Search by fact types
-    for ft in fact_types:
-        facts = FactIndex.objects.filter(
-            fact_type=ft,
-            confidence__gte=0.5,
-        ).select_related('page__document')
-        if region and region in ('eu', 'india', 'us'):
-            facts = facts.filter(page__document__region=region)
-
-        # Match subject against query terms
-        for f in facts[:20]:
-            subject_score = 0
-            for term in expanded_terms[:10]:
-                if term in f.subject.lower() or term in f.value.lower() or term in f.raw_text.lower():
-                    subject_score += 1
-            if subject_score > 0:
-                fact_results.append((f, subject_score))
-
-            # Also search by expanded terms in raw_text
-        search_terms = expanded_terms[:8] if expanded_terms else query_lower.split()
-        for term in search_terms:
-            if len(term) > 2:
-                facts_qs = FactIndex.objects.filter(
-                    raw_text__icontains=term,
-                    confidence__gte=0.5,
-                ).select_related('page__document')
-                if region and region in ('eu', 'india', 'us'):
-                    facts_qs = facts_qs.filter(page__document__region=region)
-                for f in facts_qs[:10]:
-                    if not any(fr[0].id == f.id for fr in fact_results):
-                        fact_results.append((f, 1))
-
-    fact_results.sort(key=lambda x: x[1], reverse=True)
-    fact_results = fact_results[:10]
-
-# Retrieval logic moved to retrieval_service.py
-
-def _bm25_score_list(query_lower: str, texts: List[str]) -> List[float]:
-    """Compute BM25-like scores for a list of texts."""
-    from rank_bm25 import BM25Okapi
-
-    if not texts:
-        return []
-
-    query_tokens = re.findall(r'\w+', query_lower)
-    if not query_tokens:
-        return [0.0] * len(texts)
-
-    tokenized = [re.findall(r'\w+', t.lower()) for t in texts]
-    bm25 = BM25Okapi(tokenized)
-    return list(bm25.get_scores(query_tokens))
-
 
 # ============================================================================
 # VIEWS
 # ============================================================================
 
+# Landing page URL shown to anonymous visitors (overridable in .env).
+LANDING_URL = os.environ.get('LANDING_URL', 'http://localhost:5173')
+
 def index(request):
-    """Main page."""
+    """Main page (the chat app). Requires an authenticated session —
+    anonymous visitors are bounced to the landing page."""
+    if not request.user.is_authenticated:
+        return redirect(LANDING_URL)
     import os
     common_queries = []
     try:
@@ -292,6 +197,7 @@ def get_page_content(request, page_id):
 
 @csrf_exempt
 @require_http_methods(["GET"])
+@require_login_json
 def search_knowledge_base(request):
     query = request.GET.get('q', '')
     region = request.GET.get('region', None)
@@ -357,6 +263,7 @@ def get_query_suggestions(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
+@require_login_json
 async def ask_question(request):
     """Ask a question using the Agentic RAG (LlamaIndex Async Workflow)."""
     try:
@@ -428,6 +335,7 @@ async def ask_question(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
+@require_login_json
 def ask_question_stream(request):
     """Streaming version of ask_question (Agentic RAG)."""
     try:
@@ -481,6 +389,7 @@ def get_knowledge_base_stats(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
+@require_login_json
 def enhanced_web_search(request):
     """
     Enhanced web search endpoint with multi-source search and result synthesis.
@@ -567,6 +476,7 @@ def enhanced_web_search(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
+@require_login_json
 def enhanced_web_search_stream(request):
     """
     Stream enhanced web search results for real-time feedback.
@@ -646,6 +556,7 @@ def enhanced_web_search_stream(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
+@require_login_json
 def synthesize_web_search(request):
     """
     Synthesize web search results for LLM context.
@@ -701,6 +612,7 @@ def synthesize_web_search(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
+@require_login_json
 def clear_knowledge_base(request):
     FactIndex.objects.all().delete()
     SearchIndex.objects.all().delete()
@@ -724,6 +636,7 @@ ALLOWED_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg']
 
 @csrf_exempt
 @require_http_methods(["POST"])
+@require_login_json
 def upload_document(request):
     """
     Upload document, extract text, store in session.
@@ -802,6 +715,7 @@ def upload_document(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
+@require_login_json
 def clear_uploaded_document(request):
     """
     Clear a specific uploaded document from session.
