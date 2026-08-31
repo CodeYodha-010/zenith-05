@@ -51,6 +51,12 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:5173',
 ]
 
+# Behind the Vite proxy (or any localhost reverse proxy), Django can't
+# otherwise detect an incoming HTTPS request. With the X-Forwarded-Proto
+# header this makes request.is_secure() and built-in redirects behave
+# correctly — useful once the landing page is served over HTTPS.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 # Application definition
 
@@ -169,10 +175,15 @@ LOGGING = {
             'formatter': 'verbose',
         },
     },
-    'loggers': {
+        'loggers': {
         'rag_pipeline': {
             'handlers': ['console'],
             'level': 'INFO',
+            'propagate': False,
+        },
+        'django.security.csrf': {
+            'handlers': ['console'],
+            'level': 'WARNING',
             'propagate': False,
         },
     },
