@@ -5,49 +5,49 @@
 
 :root {
   /* === 1. COLOR SYSTEM — BASE LAYER (dark-only, locked theme) === */
-  --color-bg-deep:        #05080b;      /* Canvas - near-black with blue undertone */
-  --color-bg-elevated:    #0d141c;      /* Cards, panels */
-  --color-bg-glass:       rgba(13, 20, 28, 0.72);
+  --color-bg-deep:        #050505;      /* Canvas - near-black with blue undertone */
+  --color-bg-elevated:    #0d0b08;      /* Cards, panels */
+  --color-bg-glass:       #0b0a08;
 
   /* === BORDER LAYER === */
-  --color-border-subtle:  rgba(100, 116, 139, 0.08);
-  --color-border-glass:   rgba(148, 163, 184, 0.12);
-  --color-border-strong:  rgba(148, 163, 184, 0.20);
+  --color-border-subtle:  rgba(245, 241, 232, 0.08);
+  --color-border-glass:   rgba(245, 241, 232, 0.14);
+  --color-border-strong:  rgba(245, 241, 232, 0.22);
 
   /* === TEXT LAYER === */
-  --color-text-primary:   #e2e8f0;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted:     #64748b;
-  --color-text-inverse:   #05080b;
+  --color-text-primary:   #f5f1e8;
+  --color-text-secondary: rgba(245, 241, 232, 0.65);
+  --color-text-muted:     rgba(245, 241, 232, 0.40);
+  --color-text-inverse:   #050505;
 
   /* === ACCENT LAYER (single brand accent + semantic) === */
-  --color-accent:         #00d4aa;
-  --color-accent-hover:   #14e8bb;
-  --color-accent-dim:     rgba(0, 212, 170, 0.10);
-  --color-accent-border:  rgba(0, 212, 170, 0.25);
-  --color-accent-glow:    rgba(0, 212, 170, 0.15);
+  --color-accent:         #e8a23a;
+  --color-accent-hover:   #f0b45a;
+  --color-accent-dim:     rgba(232, 162, 58, 0.10);
+  --color-accent-border:  rgba(232, 162, 58, 0.30);
+  --color-accent-glow:    rgba(232, 162, 58, 0.12);
 
   /* === SEMANTIC ACCENTS (state only, never decorative) === */
-  --color-success:        #00d4aa;
+  --color-success:        #86a873;
   --color-warning:        #f59e0b;
   --color-warning-dim:    rgba(245, 158, 11, 0.10);
   --color-warning-border: rgba(245, 158, 11, 0.25);
-  --color-error:          #ef4444;
+  --color-error:          #d96c5f;
   --color-error-dim:      rgba(239, 68, 68, 0.10);
   --color-error-border:   rgba(239, 68, 68, 0.25);
-  --color-info:           #3b82f6;
-  --color-info-dim:       rgba(59, 130, 246, 0.10);
-  --color-info-border:    rgba(59, 130, 246, 0.25);
+  --color-info:           #7f9bb3;
+  --color-info-dim:       rgba(127, 155, 179, 0.12);
+  --color-info-border:    rgba(127, 155, 179, 0.30);
 
   /* === GLASS HIGHLIGHTS === */
   --color-glass-highlight-top:    rgba(255, 255, 255, 0.04);
   --color-glass-highlight-bottom: rgba(255, 255, 255, 0.01);
 
   /* === SHADOWS === */
-  --shadow-glass-sm:    0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-glass-md:    0 4px 24px rgba(0, 0, 0, 0.4);
-  --shadow-glass-lg:    0 8px 32px rgba(0, 0, 0, 0.5);
-  --shadow-glass-xl:    0 16px 48px rgba(0, 0, 0, 0.55);
+  --shadow-glass-sm:    0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-glass-md:    0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-glass-lg:    0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-glass-xl:    0 8px 24px rgba(0, 0, 0, 0.5);
   --shadow-focus:       0 0 0 3px var(--color-accent-glow);
 
   /* === 2. TYPOGRAPHY === */
@@ -109,8 +109,8 @@
   --bp-2xl:  1536px;
 
   /* === 4. GLASS TOKENS === */
-  --glass-blur:          saturate(180%) blur(24px);
-  --glass-blur-reduced:  saturate(150%) blur(16px);
+  --glass-blur:          none;
+  --glass-blur-reduced:  none;
   --glass-bg:            var(--color-bg-glass);
   --glass-border:        var(--color-border-glass);
   --glass-highlight:     var(--color-glass-highlight-top);
