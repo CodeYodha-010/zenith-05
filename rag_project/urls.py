@@ -17,7 +17,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from rag_app import api_auth
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('rag_app.urls')),
+    path('api/auth/csrf/', api_auth.csrf, name='api_auth_csrf'),
+    path('api/auth/register/', api_auth.register, name='api_auth_register'),
+    path('api/auth/login/', api_auth.login_view, name='api_auth_login'),
+    path('api/auth/logout/', api_auth.logout_view, name='api_auth_logout'),
+    path('api/auth/me/', api_auth.me, name='api_auth_me'),
 ]
