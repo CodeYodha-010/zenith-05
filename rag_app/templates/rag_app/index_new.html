@@ -36,72 +36,37 @@
                     <h1 class="z-welcome-brand-title">Trade rules, <em>made clear.</em></h1>
                     <p class="z-welcome-brand-sub">Form Z-1 · Grounded in official sources</p>
                 </div>
-                <div class="z-welcome-grid">
-                    <!-- Quick Start -->
-                    <div class="z-welcome-panel">
-                        <h2 class="z-welcome-title">Quick Start</h2>
-                        <div class="z-quick-start-list">
-                            <button class="z-quick-start-item"
-                                    data-query="What is HS code for apple export to USA?">
-                                <span class="z-quick-start-icon">Q.01</span>
-                                <span class="z-quick-start-text">HS Code Lookup</span>
-                            </button>
-                            <button class="z-quick-start-item"
-                                    data-query="Duty rate for mango export to UAE">
-                                <span class="z-quick-start-icon">Q.02</span>
-                                <span class="z-quick-start-text">Duty Rates</span>
-                            </button>
-                            <button class="z-quick-start-item"
-                                    data-query="Export procedure for grapes to EU step by step">
-                                <span class="z-quick-start-icon">Q.03</span>
-                                <span class="z-quick-start-text">Export Procedure</span>
-                            </button>
-                            <button class="z-quick-start-item"
-                                    data-query="Phytosanitary certificate requirements for mango">
-                                <span class="z-quick-start-icon">Q.04</span>
-                                <span class="z-quick-start-text">Certificates</span>
-                            </button>
-                            <button class="z-quick-start-item"
-                                    data-query="Compare duty rates for wheat between India and USA">
-                                <span class="z-quick-start-icon">Q.05</span>
-                                <span class="z-quick-start-text">Compare Regions</span>
-                            </button>
-                            <button class="z-quick-start-item"
-                                    data-query="Latest export regulations for organic spices to EU 2025">
-                                <span class="z-quick-start-icon">Q.06</span>
-                                <span class="z-quick-start-text">Web Search</span>
-                            </button>
-                        </div>
+                <div class="z-welcome-suggest">
+                    <div class="z-quick-start-list">
+                        <button class="z-quick-start-item"
+                                data-query="What is HS code for apple export to USA?">
+                            <span class="z-quick-start-icon">Q.01</span>
+                            <span class="z-quick-start-text">HS Code Lookup</span>
+                        </button>
+                        <button class="z-quick-start-item"
+                                data-query="Duty rate for mango export to UAE">
+                            <span class="z-quick-start-icon">Q.02</span>
+                            <span class="z-quick-start-text">Duty Rates</span>
+                        </button>
+                        <button class="z-quick-start-item"
+                                data-query="Export procedure for grapes to EU step by step">
+                            <span class="z-quick-start-icon">Q.03</span>
+                            <span class="z-quick-start-text">Export Procedure</span>
+                        </button>
+                        <button class="z-quick-start-item"
+                                data-query="Latest export regulations for organic spices to EU 2025">
+                            <span class="z-quick-start-icon">Q.04</span>
+                            <span class="z-quick-start-text">Live Web Search</span>
+                        </button>
                     </div>
 
-                    <!-- KB Status -->
-                    <div class="z-welcome-panel z-welcome-panel--status">
-                        <h2 class="z-welcome-title">Knowledge Base</h2>
-                        <div class="z-kb-stats-grid">
-                            <div class="z-kb-stat">
-    <span class="z-kb-stat-value" data-count="{{ stats.total_documents }}">{{ stats.total_documents }}</span>
-    <span class="z-kb-stat-label">Documents</span>
-</div>
-                            <div class="z-kb-stat">
-    <span class="z-kb-stat-value" data-count="{{ stats.total_pages }}">{{ stats.total_pages }}</span>
-    <span class="z-kb-stat-label">Pages</span>
-</div>
-                            <div class="z-kb-stat">
-    <span class="z-kb-stat-value" data-count="{{ stats.total_facts }}">{{ stats.total_facts }}</span>
-    <span class="z-kb-stat-label">Facts</span>
-</div>
-                            <div class="z-kb-stat">
-                                <span class="z-kb-stat-value">{{ stats.regions.india }} / {{ stats.regions.us }} / {{ stats.regions.eu }}</span>
-                                <span class="z-kb-stat-label">India / USA / EU</span>
-                            </div>
-                        </div>
-                        <p class="z-kb-last-updated">Last indexed: recently</p>
-                        {% if stats.total_documents == 0 %}
+                    {% if stats.total_documents == 0 %}
+                    <div class="z-welcome-upload-row">
                         <button type="button" class="z-upload-prompt-btn" id="welcome-upload-btn">
                             Upload First Document
                         </button>
-                        {% endif %}
                     </div>
+                    {% endif %}
                 </div>
             </div>
 
