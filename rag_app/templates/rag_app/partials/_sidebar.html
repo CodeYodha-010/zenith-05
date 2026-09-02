@@ -6,7 +6,7 @@
        role="navigation"
        aria-label="Knowledge base navigation">
 
-    <!-- Sidebar Header: Brand -->
+    <!-- Sidebar Header: Brand + Status (merged) -->
     <div class="z-sidebar-brand">
         <a href="/" class="z-brand" aria-label="Zenith Export AI home">
             <div class="z-brand-icon">
@@ -19,17 +19,10 @@
                 <span class="z-brand-tag">Clearance Assistant</span>
             </div>
         </a>
-    </div>
-
-    <!-- System Status -->
-    <div class="z-sidebar-section">
         <div class="z-status-row">
             <span class="z-status-dot" aria-hidden="true"></span>
-            <span class="z-status-text">Index ready</span>
+            <span class="z-status-text">Index ready &middot; {{ stats.total_documents }} docs</span>
         </div>
-        <p class="z-kb-status">
-            {{ stats.total_documents }} documents &bull; {{ stats.total_pages }} pages &bull; Last updated: recently
-        </p>
     </div>
 
     <!-- Region Selector -->
@@ -123,26 +116,6 @@
         <div id="sidebar-recent-list" class="z-recent-list" role="list" aria-label="Recent questions">
             <!-- Rendered by sidebar.js -->
         </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="z-sidebar-section z-sidebar-section--actions">
-        <button type="button" class="z-quick-action-btn z-quick-action-btn--primary" id="sidebar-upload-action">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            Upload Document
-        </button>
-        <button type="button" class="z-quick-action-btn" id="sidebar-stats-action">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="20" x2="18" y2="10"/>
-                <line x1="12" y1="20" x2="12" y2="4"/>
-                <line x1="6" y1="20" x2="6" y2="14"/>
-            </svg>
-            Statistics
-        </button>
     </div>
 
     <!-- Resize Handle -->
