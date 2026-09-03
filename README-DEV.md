@@ -17,7 +17,8 @@ pip install -r requirements.txt
 # Secrets — copy the template and fill with your keys
 cp .env.example .env
 # Edit .env:
-#   DJANGO_SECRET_KEY, OPENROUTER_API_KEY, NVIDIA_API_KEY, TAVILY_API_KEY, ...
+#   SECRET_KEY, OPENROUTER_API_KEY, NVIDIA_API_KEY, TAVILY_API_KEY, ...
+# The app refuses to start without SECRET_KEY (no insecure fallback).
 
 python manage.py migrate
 python manage.py runserver
@@ -46,7 +47,7 @@ App starts at `http://127.0.0.1:8000/`.
 
 | Var | Purpose |
 |---|---|
-| `DJANGO_SECRET_KEY` | Django sessions/CSRF |
+| `SECRET_KEY` | Django sessions/CSRF (required — app will not start without it) |
 | `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` | LLM (text generation) |
 | `NVIDIA_API_KEY` / `NVIDIA_OCR_API_KEY` | Embeddings + OCR fallback |
 | `TAVILY_API_KEY` | Web search |
