@@ -65,6 +65,16 @@ check('me/ returns the new user', r.json().get('user', {}).get('username') == US
 r = s2.get(f'{BASE}/search/', params={'q': 'wheat'}, timeout=30)
 check('authed /search/ works', r.status_code == 200, f'got {r.status_code}')
 
+# ---- 3b. Phase 1 security gates -----------------------------------------
+r = s2.post(f'{BASE}/ask/stream/', json={'question': 'test'}, timeout=10)
+check('ask/stream without CSRF token is 403', r.status_code == 403, f'got {r.status_code}')
+
+r = s2.post(f'{BASE}/upload-document/', files={'file': ('x.pdf', b'x')}, timeout=10)
+check('upload without CSRF token is 403', r.status_code == 403, f'got {r.status_code}')
+
+r = post_json(s2, '/clear/', {})
+check('/clear/ blocked for non-staff users', r.status_code == 403, f'got {r.status_code}')
+
 r = post_json(s2, '/api/auth/register/', {'email': EMAIL, 'username': USERNAME, 'password': PASSWORD})
 check('duplicate registration rejected', r.status_code == 400)
 
