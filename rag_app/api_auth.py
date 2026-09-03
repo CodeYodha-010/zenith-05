@@ -47,6 +47,41 @@ def require_login_json(view):
     return wrapper
 
 
+def require_staff_json(view):
+    """Gate a destructive view behind staff status; JSON 403 for everyone else."""
+
+    if inspect.iscoroutinefunction(view):
+        @wraps(view)
+        async def async_wrapper(request, *args, **kwargs):
+            if not request.user.is_authenticated:
+                return JsonResponse(
+                    {'success': False, 'error': 'Authentication required. Please sign in.'},
+                    status=401,
+                )
+            if not request.user.is_staff:
+                return JsonResponse(
+                    {'success': False, 'error': 'Staff permission required.'},
+                    status=403,
+                )
+            return await view(request, *args, **kwargs)
+        return async_wrapper
+
+    @wraps(view)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return JsonResponse(
+                {'success': False, 'error': 'Authentication required. Please sign in.'},
+                status=401,
+            )
+        if not request.user.is_staff:
+            return JsonResponse(
+                {'success': False, 'error': 'Staff permission required.'},
+                status=403,
+            )
+        return view(request, *args, **kwargs)
+    return wrapper
+
+
 def _user_payload(user: User) -> dict:
     return {
         'id': user.id,

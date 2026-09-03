@@ -44,7 +44,7 @@ from .services.service_registry import (
 from .retrieval_service import _multi_source_retrieve
 from .prompts import SYSTEM_PROMPT
 from .tariff_disclaimers import get_tariff_disclaimer, is_tariff_query
-from .api_auth import require_login_json
+from .api_auth import require_login_json, require_staff_json
 
 logger = logging.getLogger('rag_pipeline')
 
@@ -261,7 +261,6 @@ def get_query_suggestions(request):
     })
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 @require_login_json
 async def ask_question(request):
@@ -333,7 +332,6 @@ async def ask_question(request):
         return JsonResponse({'success': False, 'error': f'Error: {str(e)}'}, status=500)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 @require_login_json
 def ask_question_stream(request):
@@ -387,7 +385,6 @@ def get_knowledge_base_stats(request):
     return JsonResponse({'success': True, 'stats': stats})
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 @require_login_json
 def enhanced_web_search(request):
@@ -474,7 +471,6 @@ def enhanced_web_search(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 @require_login_json
 def enhanced_web_search_stream(request):
@@ -554,7 +550,6 @@ def enhanced_web_search_stream(request):
         return StreamingHttpResponse(err(), content_type='text/event-stream')
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 @require_login_json
 def synthesize_web_search(request):
@@ -610,9 +605,9 @@ def synthesize_web_search(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 @require_login_json
+@require_staff_json
 def clear_knowledge_base(request):
     FactIndex.objects.all().delete()
     SearchIndex.objects.all().delete()
@@ -634,7 +629,6 @@ MAX_UPLOAD_SIZE = 20 * 1024 * 1024  # 20MB
 ALLOWED_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg']
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 @require_login_json
 def upload_document(request):
@@ -713,7 +707,6 @@ def upload_document(request):
         })
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 @require_login_json
 def clear_uploaded_document(request):
