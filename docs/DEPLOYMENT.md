@@ -46,9 +46,17 @@ Then restart the dev server and re-run the acceptance harness.
 | Phase | Focus | Status |
 |---|---|---|
 | 0 | Backups, tag, acceptance harness | ✅ done |
-| 1 | Critical fixes (SECRET_KEY, DEBUG, CSRF, /clear) | pending |
+| 1 | Critical fixes (SECRET_KEY, DEBUG, CSRF, /clear) | ✅ done |
 | 2 | High-severity hardening (rate limits, uploads, deps) | pending |
 | 3 | Medium hardening (cookies, logging, injection) | pending |
 | 4 | Production packaging (gunicorn, Postgres, same-origin) | pending |
 | 5 | Server & TLS | pending |
 | 6 | Go-live verification | pending |
+
+## Known issues
+
+- OpenRouter free-tier model (`openai/gpt-oss-20b:free`) intermittently
+  returns "model unavailable for free" — answers fail at the LLM step.
+  Unrelated to security work; resolve by pinning a different
+  `OPENROUTER_MODEL` in `.env` or topping up the OpenRouter account.
+
