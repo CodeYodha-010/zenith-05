@@ -47,11 +47,30 @@ Then restart the dev server and re-run the acceptance harness.
 |---|---|---|
 | 0 | Backups, tag, acceptance harness | ✅ done |
 | 1 | Critical fixes (SECRET_KEY, DEBUG, CSRF, /clear) | ✅ done |
-| 2 | High-severity hardening (rate limits, uploads, deps) | pending |
+| 2 | High-severity hardening (rate limits, uploads, deps) | ✅ done |
 | 3 | Medium hardening (cookies, logging, injection) | pending |
 | 4 | Production packaging (gunicorn, Postgres, same-origin) | pending |
 | 5 | Server & TLS | pending |
 | 6 | Go-live verification | pending |
+
+## Environment variables (added in Phase 2)
+
+| Var | Default | Purpose |
+|---|---|---|
+| `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1,testserver` | Comma-separated hosts; never use `*` |
+| `DJANGO_BEHIND_PROXY` | `False` | Set `True` only when always behind a trusted reverse proxy (enables `SECURE_PROXY_SSL_HEADER`) |
+
+## Rate limits (Phase 2, fixed-window, default LocMem cache)
+
+| Endpoint | Limit | Keyed by |
+|---|---|---|
+| `POST /api/auth/register/` | 10/hour | IP |
+| `POST /api/auth/login/` | 10/min | IP |
+| `POST /ask/stream/` | 20/min | user |
+| `POST /enhanced-search/stream/` | 20/min | user |
+
+Note: the login burst test in the harness consumes the IP's login allowance;
+wait ~60s between harness runs.
 
 ## Known issues
 
