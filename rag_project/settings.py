@@ -45,7 +45,11 @@ SECRET_KEY = os.environ['SECRET_KEY']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = []
+# Hosts allowed to serve the app. Never use '*': it enables Host-header
+# poisoning (password-reset links, cache poisoning).
+ALLOWED_HOSTS = [h.strip() for h in os.getenv(
+    'DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver'
+).split(',') if h.strip()]
 
 # React landing page (Vite dev server) may POST authenticated forms to us.
 CSRF_TRUSTED_ORIGINS = [
@@ -53,11 +57,11 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:5173',
 ]
 
-# Behind the Vite proxy (or any localhost reverse proxy), Django can't
-# otherwise detect an incoming HTTPS request. With the X-Forwarded-Proto
-# header this makes request.is_secure() and built-in redirects behave
-# correctly — useful once the landing page is served over HTTPS.
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# HTTPS detection behind a reverse proxy. Only enable when the app is
+# genuinely always behind a trusted proxy - otherwise clients can spoof
+# X-Forwarded-Proto to fake request.is_secure().
+if os.getenv('DJANGO_BEHIND_PROXY', 'False').lower() in ('true', '1', 'yes'):
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Application definition
