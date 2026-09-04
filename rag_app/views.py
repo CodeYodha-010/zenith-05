@@ -44,7 +44,7 @@ from .services.service_registry import (
 from .retrieval_service import _multi_source_retrieve
 from .prompts import SYSTEM_PROMPT
 from .tariff_disclaimers import get_tariff_disclaimer, is_tariff_query
-from .api_auth import require_login_json, require_staff_json
+from .api_auth import require_login_json, require_staff_json, throttle
 
 logger = logging.getLogger('rag_pipeline')
 
@@ -169,6 +169,7 @@ def index(request):
 
 @csrf_exempt
 @require_http_methods(["GET"])
+@require_login_json
 def list_documents(request):
     region = request.GET.get('region', None)
     docs = Document.objects.all()
@@ -179,6 +180,7 @@ def list_documents(request):
 
 @csrf_exempt
 @require_http_methods(["GET"])
+@require_login_json
 def get_document_pages(request, document_id):
     doc = get_object_or_404(Document, id=document_id)
     return JsonResponse({'success': True, 'document': doc.title, 'pages': list(doc.pages.values('id', 'page_number', 'summary'))})
@@ -186,6 +188,7 @@ def get_document_pages(request, document_id):
 
 @csrf_exempt
 @require_http_methods(["GET"])
+@require_login_json
 def get_page_content(request, page_id):
     page = get_object_or_404(DocumentPage, id=page_id)
     return JsonResponse({
@@ -223,6 +226,7 @@ def search_knowledge_base(request):
 
 @csrf_exempt
 @require_http_methods(["GET"])
+@require_login_json
 def get_query_suggestions(request):
     query = request.GET.get('q', '').lower().strip()
     max_results = int(request.GET.get('limit', 5))
@@ -334,6 +338,7 @@ async def ask_question(request):
 
 @require_http_methods(["POST"])
 @require_login_json
+@throttle('20/min', 'ask', by='user')
 def ask_question_stream(request):
     """Streaming version of ask_question (Agentic RAG)."""
     try:
@@ -365,6 +370,7 @@ def ask_question_stream(request):
 
 @csrf_exempt
 @require_http_methods(["GET"])
+@require_login_json
 def get_knowledge_base_stats(request):
     stats = {
         'documents': {
@@ -473,6 +479,7 @@ def enhanced_web_search(request):
 
 @require_http_methods(["POST"])
 @require_login_json
+@throttle('20/min', 'websearch', by='user')
 def enhanced_web_search_stream(request):
     """
     Stream enhanced web search results for real-time feedback.
@@ -627,6 +634,18 @@ from .utils.document_parser import DocumentParser
 
 MAX_UPLOAD_SIZE = 20 * 1024 * 1024  # 20MB
 ALLOWED_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg']
+MAX_UPLOAD_PAGES = 50          # parser DoS guard for crafted PDFs
+MAX_UPLOAD_TEXT_CHARS = 150_000  # ~300+ pages of text; caps session row size
+MAX_SESSION_UPLOADS = 3        # per-user attachment quota
+
+# Magic-byte signatures: content must match the claimed extension,
+# independent of what the client declared.
+MAGIC_BYTES = {
+    'pdf': b'%PDF-',
+    'png': b'\x89PNG\r\n\x1a\n',
+    'jpg': b'\xff\xd8\xff',
+    'jpeg': b'\xff\xd8\xff',
+}
 
 
 @require_http_methods(["POST"])
@@ -644,7 +663,7 @@ def upload_document(request):
             return JsonResponse({
                 'success': False,
                 'error': 'No file provided'
-            })
+            }, status=400)
         
         uploaded_file = request.FILES['file']
         filename = uploaded_file.name
@@ -655,14 +674,50 @@ def upload_document(request):
             return JsonResponse({
                 'success': False,
                 'error': f'Unsupported file type: {file_ext}. Allowed: PDF, PNG, JPG, JPEG'
-            })
+            }, status=400)
         
         # Validate file size
         if uploaded_file.size > MAX_UPLOAD_SIZE:
             return JsonResponse({
                 'success': False,
                 'error': f'File too large. Maximum size is 20MB'
-            })
+            }, status=400)
+        
+        # Validate content matches the claimed extension (magic bytes) -
+        # rejects e.g. an executable or script renamed to .pdf before any
+        # parser touches it.
+        head = uploaded_file.read(8)
+        uploaded_file.seek(0)
+        if not head.startswith(MAGIC_BYTES.get(file_ext, b'')):
+            return JsonResponse({
+                'success': False,
+                'error': f'File content does not look like a valid {file_ext.upper()}.'
+            }, status=400)
+        
+        # PDF-specific DoS guards: reject encrypted files and unreasonably
+        # large documents before the (Java/OCR) parser is invoked.
+        if file_ext == 'pdf':
+            try:
+                import fitz
+                data = uploaded_file.read()
+                uploaded_file.seek(0)
+                with fitz.open(stream=data, filetype='pdf') as pdf_doc:
+                    if pdf_doc.is_encrypted:
+                        return JsonResponse({
+                            'success': False,
+                            'error': 'Encrypted PDFs are not supported.'
+                        }, status=400)
+                    if pdf_doc.page_count > MAX_UPLOAD_PAGES:
+                        return JsonResponse({
+                            'success': False,
+                            'error': f'PDF too large: {pdf_doc.page_count} pages (max {MAX_UPLOAD_PAGES}).'
+                        }, status=400)
+            except Exception as parse_err:
+                logger.warning(f'PDF pre-check failed for {filename}: {parse_err}')
+                return JsonResponse({
+                    'success': False,
+                    'error': 'File could not be read as a PDF.'
+                }, status=400)
         
         # Parse the document
         parser = DocumentParser()
@@ -674,29 +729,46 @@ def upload_document(request):
                 'error': result.get('error', 'Unknown error')
             })
         
+        # Cap extracted text: bounds the session row size and the prompt
+        # size of any question that attaches this document.
+        text = result.get('text', '')
+        truncated = False
+        if len(text) > MAX_UPLOAD_TEXT_CHARS:
+            text = text[:MAX_UPLOAD_TEXT_CHARS]
+            truncated = True
+        
         # Generate unique doc ID
         doc_id = str(uuid.uuid4())
         
-        # Store in session
-        if 'uploaded_docs' not in request.session:
-            request.session['uploaded_docs'] = {}
+        # Store in session (per-user quota: 3 attachments)
+        docs = request.session.get('uploaded_docs', {})
+        if len(docs) >= MAX_SESSION_UPLOADS and doc_id not in docs:
+            return JsonResponse({
+                'success': False,
+                'error': f'Upload limit reached ({MAX_SESSION_UPLOADS}). Clear an attached document first.'
+            }, status=400)
         
-        request.session['uploaded_docs'][doc_id] = {
+        docs[doc_id] = {
             'filename': result['filename'],
-            'text': result['text'],
-            'text_length': len(result['text']),
+            'text': text,
+            'text_length': len(text),
             'uploaded_at': str(timezone.now())
         }
+        request.session['uploaded_docs'] = docs
         request.session.modified = True
         
-        logger.info(f'Document uploaded: {filename}, doc_id: {doc_id}, size: {len(result["text"])} chars')
+        logger.info(f'Document uploaded: {filename}, doc_id: {doc_id}, size: {len(text)} chars, truncated: {truncated}')
+        
+        message = 'Document processed successfully'
+        if truncated:
+            message += f' (text truncated to {MAX_UPLOAD_TEXT_CHARS} characters)'
         
         return JsonResponse({
             'success': True,
             'doc_id': doc_id,
             'filename': result['filename'],
-            'text_length': len(result['text']),
-            'message': 'Document processed successfully'
+            'text_length': len(text),
+            'message': message
         })
         
     except Exception as e:
