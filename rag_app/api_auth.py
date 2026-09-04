@@ -9,8 +9,10 @@ Also exposes require_login_json: a decorator that gates any view
 import json
 import inspect
 import logging
+import time
 from functools import wraps
 
+from django.core.cache import cache
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -20,6 +22,63 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
 logger = logging.getLogger('rag_pipeline')
+
+
+def throttle(rate, scope, by='ip'):
+    """
+    Fixed-window rate limiter backed by Django's default cache.
+
+    rate : 'N/period' with period in ('min', 'hour')
+    scope: distinct bucket namespace (e.g. 'login', 'register')
+    by   : 'ip' (safe for anonymous views) or 'user' (requires an
+           authentication decorator to run before this one)
+
+    Returns 429 JSON when the window's allowance is exhausted.
+    Safe for sync and async views (LocMem cache is an in-process dict).
+    """
+    count_s, period_s = rate.split('/')
+    count = int(count_s)
+    seconds = {'min': 60, 'hour': 3600}[period_s]
+
+    def _window_key(request):
+        if by == 'user' and getattr(request, 'user', None) and request.user.is_authenticated:
+            ident = f'u{request.user.id}'
+        else:
+            ident = request.META.get('REMOTE_ADDR', 'unknown')
+        return f'thr:{scope}:{ident}:{int(time.time() // seconds)}'
+
+    def _allow(request):
+        key = _window_key(request)
+        if cache.get(key) is None:
+            cache.add(key, 0, seconds)
+        try:
+            return cache.incr(key) <= count
+        except ValueError:
+            # key expired between get and incr (window edge) - treat as allowed
+            return True
+
+    def _denied():
+        return JsonResponse(
+            {'success': False, 'error': 'Too many requests. Please slow down and try again shortly.'},
+            status=429,
+        )
+
+    def decorator(view):
+        if inspect.iscoroutinefunction(view):
+            @wraps(view)
+            async def async_wrapper(request, *args, **kwargs):
+                if not _allow(request):
+                    return _denied()
+                return await view(request, *args, **kwargs)
+            return async_wrapper
+
+        @wraps(view)
+        def wrapper(request, *args, **kwargs):
+            if not _allow(request):
+                return _denied()
+            return view(request, *args, **kwargs)
+        return wrapper
+    return decorator
 
 
 def require_login_json(view):
@@ -105,6 +164,7 @@ def csrf(request):
     return JsonResponse({'ok': True})
 
 
+@throttle('10/hour', 'register')
 @require_http_methods(['POST'])
 def register(request):
     data = _json_body(request)
@@ -140,6 +200,7 @@ def register(request):
     return JsonResponse({'success': True, 'user': _user_payload(user)})
 
 
+@throttle('10/min', 'login')
 @require_http_methods(['POST'])
 def login_view(request):
     data = _json_body(request)
