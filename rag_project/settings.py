@@ -60,8 +60,23 @@ CSRF_TRUSTED_ORIGINS = [
 # HTTPS detection behind a reverse proxy. Only enable when the app is
 # genuinely always behind a trusted proxy - otherwise clients can spoof
 # X-Forwarded-Proto to fake request.is_secure().
-if os.getenv('DJANGO_BEHIND_PROXY', 'False').lower() in ('true', '1', 'yes'):
+_IS_BEHIND_PROXY = os.getenv('DJANGO_BEHIND_PROXY', 'False').lower() in ('true', '1', 'yes')
+
+if _IS_BEHIND_PROXY:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    # Force HTTPS and mark cookies Secure so sessions never travel in
+    # cleartext. Dev (HTTP) stays unaffected because the flag is off.
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # HSTS: tell browsers to refuse plain HTTP for a year
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+# Always-on hardening headers
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
 
 
 # Application definition
