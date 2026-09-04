@@ -18,3 +18,19 @@ pdf2image>=1.17.0
 tavily-python>=0.3.0
 # PDF Parsing (local, free, replaces LlamaParse)
 opendataloader-pdf>=2.5.0
+
+# ==== Runtime imports missing before Phase 2 (pinned to tested versions) ====
+faiss-cpu==1.13.2
+llama-index-core==0.14.20
+llama-index-llms-openai-like==0.5.3
+llama-index-embeddings-nvidia==0.5.1
+llama-index-tools-tavily-research==0.5.0
+httpx==0.28.1
+tenacity==9.1.2
+
+# ==== Production serving stack (Phases 4-5) ====
+gunicorn>=23.0.0
+uvicorn>=0.38.0
+whitenoise>=6.8.0
+psycopg[binary]>=3.2.0
+argon2-cffi>=23.1.0
