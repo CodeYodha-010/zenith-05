@@ -43,6 +43,10 @@ def post_json(session, path, payload, expect_token=True):
 r = requests.get(f'{BASE}/search/', params={'q': 'wheat'}, timeout=10)
 check('anonymous /search/ is 401', r.status_code == 401, f'got {r.status_code}')
 
+for path in ['/documents/', '/stats/', '/suggestions/?q=wheat']:
+    r = requests.get(f'{BASE}{path}', timeout=10)
+    check(f'anonymous {path.split("?")[0]} is 401', r.status_code == 401, f'got {r.status_code}')
+
 r = requests.get(f'{BASE}/api/auth/me/', timeout=10)
 check('anonymous /me/ reports no user', r.status_code == 200 and r.json().get('user') is None)
 
@@ -75,6 +79,19 @@ check('upload without CSRF token is 403', r.status_code == 403, f'got {r.status_
 r = post_json(s2, '/clear/', {})
 check('/clear/ blocked for non-staff users', r.status_code == 403, f'got {r.status_code}')
 
+# ---- 3c. Phase 2 upload hardening ---------------------------------------
+tok = csrf_token(s2)
+r = s2.post(f'{BASE}/upload-document/',
+            files={'file': ('fake.pdf', b'this is not a pdf at all')},
+            headers={'X-CSRFToken': tok, 'Referer': BASE + '/'}, timeout=30)
+check('fake pdf (renamed text) rejected', r.status_code == 400 and not r.json().get('success'),
+      f'got {r.status_code}')
+
+r = s2.post(f'{BASE}/upload-document/',
+            files={'file': ('evil.png', b'MZ\x90\x00' + b'A' * 100)},
+            headers={'X-CSRFToken': tok, 'Referer': BASE + '/'}, timeout=30)
+check('exe-renamed-to-png rejected', r.status_code == 400, f'got {r.status_code}')
+
 r = post_json(s2, '/api/auth/register/', {'email': EMAIL, 'username': USERNAME, 'password': PASSWORD})
 check('duplicate registration rejected', r.status_code == 400)
 
@@ -94,6 +111,18 @@ check('session cleared after logout', r.json().get('user') is None)
 
 r = s3.get(f'{BASE}/search/', params={'q': 'wheat'}, timeout=10)
 check('/search/ re-locked after logout', r.status_code == 401)
+
+# ---- 4b. Phase 2: login throttling ---------------------------------------
+# Note: consumes the login allowance for this IP. Keep at the end of the
+# suite and wait ~60s before re-running the harness.
+s4 = requests.Session()
+codes = []
+for _ in range(12):
+    r = post_json(s4, '/api/auth/login/', {'email': 'nobody@zenith-test.dev', 'password': 'WrongPassword!1'})
+    codes.append(r.status_code)
+    if r.status_code == 429:
+        break
+check('login burst hits 429 throttle', 429 in codes, f'last codes: {codes[-3:]}')
 
 # ---- 5. chat page serves ------------------------------------------------
 r = s2.get(f'{BASE}/', timeout=15)
