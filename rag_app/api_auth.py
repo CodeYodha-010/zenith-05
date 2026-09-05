@@ -179,10 +179,12 @@ def register(request):
         errors['username'] = 'Username is required.'
     elif len(username) > 150:
         errors['username'] = 'Username is too long.'
+    # Deliberately generic: telling the caller which of username/email is
+    # taken lets an attacker enumerate registered accounts.
     if username and User.objects.filter(username__iexact=username).exists():
-        errors['username'] = 'That username is already taken.'
+        errors['account'] = 'Registration failed. An account with these details may already exist, or the details cannot be used.'
     if email and User.objects.filter(email__iexact=email).exists():
-        errors['email'] = 'An account with this email already exists.'
+        errors['account'] = 'Registration failed. An account with these details may already exist, or the details cannot be used.'
     if not password:
         errors['password'] = 'Password is required.'
     else:
