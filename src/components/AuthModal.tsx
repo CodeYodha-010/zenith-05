@@ -155,7 +155,9 @@ export default function AuthModal() {
             {errors.password && <p className="mt-1.5 text-xs text-red-300/90">{errors.password}</p>}
           </div>
 
-          {errors.detail && <p className="text-xs text-red-300/90">{errors.detail}</p>}
+          {(errors.detail || errors.account) && (
+            <p className="text-xs text-red-300/90">{errors.detail || errors.account}</p>
+          )}
 
           <button
             type="submit"
