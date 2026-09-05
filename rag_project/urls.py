@@ -16,11 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+import os
 
 from rag_app import api_auth
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # Renamable so the default /admin/ URL isn't a standing brute-force target
+    path(os.getenv('DJANGO_ADMIN_URL', 'admin/'), admin.site.urls),
     path('', include('rag_app.urls')),
     path('api/auth/csrf/', api_auth.csrf, name='api_auth_csrf'),
     path('api/auth/register/', api_auth.register, name='api_auth_register'),
