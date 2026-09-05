@@ -153,6 +153,15 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Argon2 preferred for new hashes; existing PBKDF2 hashes still validate
+# and are upgraded transparently on the user's next login.
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+]
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
@@ -181,6 +190,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # LOGGING CONFIGURATION
 # ============================================================================
 
+# Security log directory must exist before the file handler opens it
+os.makedirs(BASE_DIR / 'logs', exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -195,15 +207,27 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
+        'security_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'security.log',
+            'maxBytes': 5 * 1024 * 1024,
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
     },
-        'loggers': {
+    'loggers': {
         'rag_pipeline': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,
         },
         'django.security.csrf': {
-            'handlers': ['console'],
+            'handlers': ['console', 'security_file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'django.security': {
+            'handlers': ['console', 'security_file'],
             'level': 'WARNING',
             'propagate': False,
         },
