@@ -48,8 +48,8 @@ Then restart the dev server and re-run the acceptance harness.
 | 0 | Backups, tag, acceptance harness | ✅ done |
 | 1 | Critical fixes (SECRET_KEY, DEBUG, CSRF, /clear) | ✅ done |
 | 2 | High-severity hardening (rate limits, uploads, deps) | ✅ done |
-| 3 | Medium hardening (cookies, logging, injection) | pending |
-| 4 | Production packaging (gunicorn, Postgres, same-origin) | pending |
+| 3 | Medium hardening (cookies, logging, injection) | done |
+| 4 | Production packaging (gunicorn, Postgres, same-origin) | done |
 | 5 | Server & TLS | pending |
 | 6 | Go-live verification | pending |
 
@@ -79,3 +79,12 @@ wait ~60s between harness runs.
   Unrelated to security work; resolve by pinning a different
   `OPENROUTER_MODEL` in `.env` or topping up the OpenRouter account.
 
+## Phase 4 - production packaging runbook
+
+1. Build the landing page: cd zenith-landing && npm run build:prod
+2. Set in .env: DEBUG=False, DJANGO_LANDING_DIST=<path>/dist, LANDING_URL=/landing/, DJANGO_ALLOWED_HOSTS=<domain>, DJANGO_BEHIND_PROXY=True, DJANGO_COOKIE_SECURE=True
+3. Optional Postgres: set DJANGO_DB_* then manage.py migrate
+4. Collect static: python manage.py collectstatic --noinput
+5. Serve: gunicorn rag_project.asgi:application -k uvicorn.workers.UvicornWorker --workers 2 --bind 127.0.0.1:8000 (see deploy/zenith.service for the systemd unit)
+6. Reverse proxy (Caddy): domain -> 127.0.0.1:8000, automatic TLS
+7. Verify: python scripts/acceptance_test.py https://<domain>
