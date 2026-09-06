@@ -127,12 +127,26 @@ WSGI_APPLICATION = 'rag_project.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Set DJANGO_DB_ENGINE (e.g. django.db.backends.postgresql) plus the
+# credentials below to run on Postgres in production; otherwise SQLite.
+if os.getenv('DJANGO_DB_ENGINE'):
+    DATABASES = {
+        'default': {
+            'ENGINE': os.getenv('DJANGO_DB_ENGINE'),
+            'NAME': os.getenv('DJANGO_DB_NAME', 'zenith'),
+            'USER': os.getenv('DJANGO_DB_USER', ''),
+            'PASSWORD': os.getenv('DJANGO_DB_PASSWORD', ''),
+            'HOST': os.getenv('DJANGO_DB_HOST', ''),
+            'PORT': os.getenv('DJANGO_DB_PORT', ''),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
