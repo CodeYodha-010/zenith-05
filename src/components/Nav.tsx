@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
 import { Menu, LogOut } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
-import { APP_URL } from '../lib/api';
+import { CHAT_URL } from '../lib/api';
 
 const LINKS = [
   { n: '01', label: 'The Shift', href: '#shift' },
@@ -60,8 +60,8 @@ export default function Nav() {
               Operator: {user.username}
             </span>
             <a
-              href={APP_URL}
-              target="_blank"
+              href={CHAT_URL || '/'}
+              target={CHAT_URL ? "_blank" : undefined}
               rel="noreferrer"
               className="stamp text-[#e8a23a] hover:text-black hover:bg-[#e8a23a] hover:-rotate-2 text-xs font-medium px-5 py-2.5 transition-all duration-200"
             >

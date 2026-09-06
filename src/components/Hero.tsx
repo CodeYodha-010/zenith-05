@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
-import { APP_URL } from '../lib/api';
+import { CHAT_URL } from '../lib/api';
 
 /**
  * Zenith hero — cursor-following spotlight that reveals a second image.
@@ -147,8 +147,8 @@ export default function Hero() {
         </p>
         {user ? (
           <a
-            href={APP_URL}
-            target="_blank"
+            href={CHAT_URL || '/'}
+            target={CHAT_URL ? '_blank' : undefined}
             rel="noreferrer"
             className="bg-[#e8a23a] hover:bg-[#d18f28] text-white text-sm font-medium px-7 py-3 rounded-full transition-all hover:scale-[1.03] active:scale-95 hover:shadow-lg hover:shadow-[#e8a23a]/30"
           >

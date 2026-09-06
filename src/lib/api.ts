@@ -17,8 +17,15 @@ export interface ApiResult<T = unknown> {
   data: T;
 }
 
+// Where the Django chat app lives.
+// - Dev (no env var): the backend on :8000
+// - Prod build: set VITE_APP_URL='' in .env.production for same-origin
+//   relative URLs (the built landing is served by Django itself).
 export const APP_URL: string =
-  (import.meta.env.VITE_APP_URL as string | undefined) || 'http://localhost:8000';
+  (import.meta.env.VITE_APP_URL as string | undefined) ?? 'http://localhost:8000';
+
+/** URL to send the browser to after login (chat app entry). */
+export const CHAT_URL: string = APP_URL || '/';
 
 function getCookie(name: string): string | null {
   const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));

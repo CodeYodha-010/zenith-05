@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { api, APP_URL, type AuthUser } from '../lib/api';
+import { api, CHAT_URL, type AuthUser } from '../lib/api';
 
 export type AuthMode = 'signin' | 'signup';
 
@@ -63,8 +63,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(data.user);
       setAuthOpen(false);
       // Redirect to the chatbot — a full navigation so the session cookie
-      // (scoped to localhost) is presented immediately at APP_URL.
-      window.location.assign(APP_URL);
+      // (scoped to localhost) is presented immediately at CHAT_URL.
+      window.location.assign(CHAT_URL);
       return { ok: true };
     }
     return { ok: false, errors: (data as { errors?: Record<string, string> }).errors };
@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (ok && data.user) {
         setUser(data.user);
         setAuthOpen(false);
-        window.location.assign(APP_URL);
+        window.location.assign(CHAT_URL);
         return { ok: true };
       }
       return { ok: false, errors: (data as { errors?: Record<string, string> }).errors };

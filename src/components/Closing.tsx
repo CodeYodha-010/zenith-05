@@ -1,6 +1,6 @@
 import Reveal from './Reveal';
 import { useAuth } from '../auth/AuthContext';
-import { APP_URL } from '../lib/api';
+import { CHAT_URL } from '../lib/api';
 
 /**
  * BOX 05 — Final clearance. Ledger ruling replaces the glow orb;
@@ -34,8 +34,8 @@ export default function Closing() {
             </p>
             {user ? (
               <a
-                href={APP_URL}
-                target="_blank"
+                href={CHAT_URL || '/'}
+                target={CHAT_URL ? "_blank" : undefined}
                 rel="noreferrer"
                 className="inline-block mt-10 stamp text-[#e8a23a] hover:text-black hover:bg-[#e8a23a] hover:-rotate-2 text-sm font-medium px-10 py-4 transition-all duration-200"
               >
