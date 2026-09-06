@@ -1,5 +1,8 @@
-from django.urls import path
+from django.urls import path, re_path
+from django.views.static import serve as django_static_serve
+
 from . import views
+from rag_project.settings import LANDING_DIST_DIR
 
 urlpatterns = [
     path('', views.index, name='index'),
@@ -22,3 +25,14 @@ urlpatterns = [
     path('clear/', views.clear_knowledge_base, name='clear_knowledge_base'),
     path('suggestions/', views.get_query_suggestions, name='get_query_suggestions'),
 ]
+
+# Same-origin landing page: when DJANGO_LANDING_DIST points at the built
+# zenith-landing/dist folder, Django serves it at /landing/ so production
+# runs entirely from one origin (no Vite server, no cross-origin cookies).
+if LANDING_DIST_DIR:
+    urlpatterns += [
+        re_path(r'^landing/?$',
+                lambda request: django_static_serve(request, 'index.html', document_root=LANDING_DIST_DIR)),
+        re_path(r'^landing/(?P<path>.*)$',
+                lambda request, path: django_static_serve(request, path, document_root=LANDING_DIST_DIR)),
+    ]

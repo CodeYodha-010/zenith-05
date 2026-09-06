@@ -204,6 +204,7 @@ STORAGES = {
 
 # Built React landing page (zenith-landing/dist). When set, Django serves
 # it same-origin at /landing/ so production does not need the Vite server.
+LANDING_DIST_DIR = os.getenv('DJANGO_LANDING_DIST', '')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
