@@ -1,0 +1,27 @@
+# /etc/systemd/system/zenith.service
+# Production process unit (Linux VPS). Requires:
+#   - code at /opt/zenith (this repo)
+#   - venv at /opt/zenith/.venv with requirements installed
+#   - env file at /etc/zenith/.env (chmod 600)
+# Enable:  systemctl enable --now zenith
+[Unit]
+Description=Zenith Export AI (Django ASGI)
+After=network.target
+
+[Service]
+Type=notify
+User=zenith
+Group=zenith
+WorkingDirectory=/opt/zenith
+EnvironmentFile=/etc/zenith/.env
+ExecStart=/opt/zenith/.venv/bin/gunicorn rag_project.asgi:application \
+    -k uvicorn.workers.UvicornWorker \
+    --workers 2 \
+    --bind 127.0.0.1:8000 \
+    --timeout 120 \
+    --access-logfile -
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
