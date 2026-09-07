@@ -55,10 +55,12 @@ App starts at `http://127.0.0.1:8000/`.
 
 ## Tests
 
-Run the golden-query regression in `scratch/`:
+Run the acceptance harness (25 security and auth checks) against a running server:
 ```bash
-python manage.py lint && echo 'lint OK'
+python scripts/acceptance_test.py http://127.0.0.1:8000
 ```
+It exits non-zero on any regression — every hardening phase must keep it green.
+`python manage.py lint` remains a fast syntax check over all Python sources.
 
 ## Notes for contributors
 
