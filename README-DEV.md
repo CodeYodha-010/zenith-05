@@ -42,6 +42,19 @@ App starts at `http://127.0.0.1:8000/`.
 - **LLM routing**: OpenRouter (model pinned to a free tier)
 - **Web search**: Tavily (advanced depth) + Jina rerank
 - **KB**: PDF/DOCX/MD ingested and chunked; SQLite metadata store
+## Code layout (post-cleanup)
+
+- `rag_app/services/` — one module per concern: `query_agent_service` (ask orchestration),
+  `retrieval_service` (4-source RRF fusion), `faiss_service`, `llm_service`,
+  `nvidia_embedding_service` / `nvidia_ocr_service` / `opendataloader_service` (ingestion),
+  `web_search_service` / `web_search_enhanced` + `query_transformer` / `result_synthesizer`
+  (Tavily pipeline), `query_understanding`, `search_config`, `cache_service`, `quality_checker`,
+  `service_registry`.
+- `rag_app/utils/` — only two modules, both live: `document_parser` (upload parsing)
+  and `web_search_utils` (used by `manage.py enhance_web_search`).
+- `scripts/acceptance_test.py` — the regression gate for every change.
+
+## Env vars (`.env`)
 
 ## Env vars (`.env`)
 
