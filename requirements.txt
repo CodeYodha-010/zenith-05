@@ -34,3 +34,6 @@ uvicorn>=0.38.0
 whitenoise>=6.8.0
 psycopg[binary]>=3.2.0
 argon2-cffi>=23.1.0
+PyJWT[crypto]>=2.9.0
+django-htmx>=1.17.0
+langchain-text-splitters>=0.3.0
