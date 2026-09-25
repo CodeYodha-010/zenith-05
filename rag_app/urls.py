@@ -6,6 +6,8 @@ from rag_project.settings import LANDING_DIST_DIR
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('healthz/', views.healthz, name='healthz'),
+
     path('documents/', views.list_documents, name='list_documents'),
     path('document/<int:document_id>/pages/', views.get_document_pages, name='get_document_pages'),
     path('page/<int:page_id>/', views.get_page_content, name='get_page_content'),

@@ -22,6 +22,7 @@ from typing import List, Dict, Tuple
 
 import numpy as np
 
+from django.conf import settings
 from django.http import JsonResponse, StreamingHttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.csrf import csrf_exempt
@@ -47,6 +48,12 @@ from .tariff_disclaimers import get_tariff_disclaimer, is_tariff_query
 from .api_auth import require_login_json, require_staff_json, throttle
 
 logger = logging.getLogger('rag_pipeline')
+
+
+@require_http_methods(['GET'])
+def healthz(request):
+    """Unauthenticated liveness endpoint for container/Space health checks."""
+    return JsonResponse({'status': 'ok', 'service': 'zenith'})
 
 # ── Keyword boost terms (trade-critical) ──
 BOOST_KEYWORDS = [
@@ -129,9 +136,13 @@ def _get_semantic_score(query: str, texts: List[str]) -> List[float]:
 LANDING_URL = os.environ.get('LANDING_URL', 'http://localhost:5173')
 
 def index(request):
-    """Main page (the chat app). Requires an authenticated session —
-    anonymous visitors are bounced to the landing page."""
-    if not request.user.is_authenticated:
+    """Render the chat shell.
+
+    In Django mode an anonymous visitor is redirected to the landing page.
+    In Supabase mode the shell is rendered so the browser can restore its
+    Supabase session and send bearer tokens on protected API calls.
+    """
+    if settings.AUTH_MODE != 'supabase' and not request.user.is_authenticated:
         return redirect(LANDING_URL)
     import os
     common_queries = []
