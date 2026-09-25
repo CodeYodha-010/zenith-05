@@ -51,6 +51,32 @@
 
     function getCsrfToken() { return getCookie('csrftoken'); }
 
+    function getSupabaseAccessToken() {
+        try {
+            const raw = localStorage.getItem('zenith-supabase-auth');
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            return parsed?.access_token || null;
+        } catch (err) {
+            console.error('Supabase session read failed:', err);
+            return null;
+        }
+    }
+
+    async function getAuthHeaders(extra = {}) {
+        let csrfToken = getCsrfToken();
+        if (!csrfToken) {
+            await fetch('/api/auth/csrf/', { credentials: 'include' });
+            csrfToken = getCsrfToken();
+        }
+        const accessToken = getSupabaseAccessToken();
+        return {
+            ...extra,
+            ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+            ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+        };
+    }
+
     function extractDomain(url) {
         try { return new URL(url).hostname.replace(/^www\./, ''); }
         catch { return url; }
@@ -244,7 +270,7 @@
                 const response = await fetch('/upload-document/', {
                     method: 'POST',
                     body: formData,
-                    headers: { 'X-CSRFToken': getCsrfToken() },
+                    headers: await getAuthHeaders(),
                 });
                 const data = await response.json();
 
@@ -303,11 +329,14 @@
             try {
                 const response = await fetch(STREAM_URL, {
                     method: 'POST',
-                    headers: {
+                    headers: await getAuthHeaders({
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': getCsrfToken(),
-                    },
-                    body: JSON.stringify({ question, region: selectedRegion || null }),
+                    }),
+                    body: JSON.stringify({
+                        question,
+                        region: selectedRegion || null,
+                        attached_doc_id: attachedDocId,
+                    }),
                 });
 
                 const reader = response.body.getReader();

@@ -12,6 +12,7 @@ import logging
 import time
 from functools import wraps
 
+from django.conf import settings
 from django.core.cache import cache
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
@@ -20,6 +21,11 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from .services.supabase_auth import (
+    require_supabase_staff,
+    require_supabase_user,
+    verify_supabase_token,
+)
 
 logger = logging.getLogger('rag_pipeline')
 
@@ -82,7 +88,9 @@ def throttle(rate, scope, by='ip'):
 
 
 def require_login_json(view):
-    """Gate a view behind authentication; JSON 401 for anonymous callers."""
+    """Gate a view behind the selected authentication mode."""
+    if settings.AUTH_MODE == 'supabase':
+        return require_supabase_user(view)
 
     if inspect.iscoroutinefunction(view):
         @wraps(view)
@@ -107,7 +115,9 @@ def require_login_json(view):
 
 
 def require_staff_json(view):
-    """Gate a destructive view behind staff status; JSON 403 for everyone else."""
+    """Gate a destructive view behind staff status."""
+    if settings.AUTH_MODE == 'supabase':
+        return require_supabase_staff(view)
 
     if inspect.iscoroutinefunction(view):
         @wraps(view)
@@ -241,6 +251,19 @@ def logout_view(request):
 
 @require_http_methods(['GET'])
 def me(request):
+    if settings.AUTH_MODE == 'supabase':
+        principal = verify_supabase_token(request)
+        if principal is None:
+            return JsonResponse({'user': None})
+        return JsonResponse({
+            'user': {
+                'id': principal.id,
+                'username': principal.username,
+                'email': principal.email,
+                'date_joined': None,
+            }
+        })
+
     if not request.user.is_authenticated:
         return JsonResponse({'user': None})
     return JsonResponse({'user': _user_payload(request.user)})
