@@ -36,6 +36,12 @@ AUTH_MODE = os.getenv('AUTH_MODE', 'django').strip().lower()
 SUPABASE_URL = os.getenv('SUPABASE_URL', '').rstrip('/')
 SUPABASE_ANON_KEY = os.getenv('SUPABASE_ANON_KEY', '')
 SUPABASE_JWT_AUDIENCE = os.getenv('SUPABASE_JWT_AUDIENCE', 'authenticated')
+
+# Document upload feature flag. Safe by default: uploads are OFF unless the
+# environment explicitly opts in (UPLOADS_ENABLED=True in .env for local dev).
+# When off, /upload-document/ is not routed and the upload buttons are not
+# rendered (see rag_app.context_processors.feature_flags).
+UPLOADS_ENABLED = os.getenv('UPLOADS_ENABLED', 'False').strip().lower() in ('true', '1', 'yes')
 # OpenDataLoader (local PDF parsing, no API key needed)
 # Java 11+ required: winget install EclipseAdoptium.Temurin.21.JDK
 
@@ -123,6 +129,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'rag_app.context_processors.feature_flags',
             ],
         },
     },

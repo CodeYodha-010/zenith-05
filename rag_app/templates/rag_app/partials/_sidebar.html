@@ -80,6 +80,7 @@
     <div class="z-sidebar-section z-sidebar-section--grow">
         <div class="z-sidebar-section-header">
             <p class="z-sidebar-label">Documents</p>
+            {% if uploads_enabled %}
             <button type="button"
                     class="z-sidebar-action-btn"
                     aria-label="Upload new document"
@@ -91,6 +92,7 @@
                     <line x1="12" y1="3" x2="12" y2="15"/>
                 </svg>
             </button>
+            {% endif %}
         </div>
 
         <div class="z-doc-search-wrap">

@@ -60,7 +60,7 @@
                         </button>
                     </div>
 
-                    {% if stats.total_documents == 0 %}
+                    {% if uploads_enabled and stats.total_documents == 0 %}
                     <div class="z-welcome-upload-row">
                         <button type="button" class="z-upload-prompt-btn" id="welcome-upload-btn">
                             Upload First Document
@@ -123,6 +123,7 @@
                     ></textarea>
                     <span id="input-help" class="z-sr-only">Press Enter to send, Shift+Enter for new line</span>
 
+                    {% if uploads_enabled %}
                     <!-- Attach button -->
                     <button type="button"
                             id="attach-button"
@@ -140,6 +141,7 @@
                            hidden
                            accept=".pdf,.png,.jpg,.jpeg"
                            aria-hidden="true">
+                    {% endif %}
 
                     <!-- Send button -->
                     <button type="submit"

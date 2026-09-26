@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.urls import path, re_path
 from django.views.static import serve as django_static_serve
 
@@ -15,9 +16,6 @@ urlpatterns = [
     path('ask/', views.ask_question, name='ask_question'),
     path('ask/stream/', views.ask_question_stream, name='ask_question_stream'),
 
-    # Document upload endpoint
-    path('upload-document/', views.upload_document, name='upload_document'),
-
     # Enhanced web search endpoints
     path('enhanced-search/', views.enhanced_web_search, name='enhanced_web_search'),
     path('enhanced-search/stream/', views.enhanced_web_search_stream, name='enhanced_web_search_stream'),
@@ -27,6 +25,14 @@ urlpatterns = [
     path('clear/', views.clear_knowledge_base, name='clear_knowledge_base'),
     path('suggestions/', views.get_query_suggestions, name='get_query_suggestions'),
 ]
+
+# Document upload is deferred for the public deployment: the route (and the
+# upload buttons in the UI) only exist when UPLOADS_ENABLED is on. Local dev
+# turns it on via .env; the packaged deployment ships without it.
+if settings.UPLOADS_ENABLED:
+    urlpatterns.append(
+        path('upload-document/', views.upload_document, name='upload_document')
+    )
 
 # Same-origin landing page: when DJANGO_LANDING_DIST points at the built
 # zenith-landing/dist folder, Django serves it at /landing/ so production

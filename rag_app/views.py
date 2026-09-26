@@ -668,6 +668,13 @@ def upload_document(request):
     POST: multipart/form-data with file
     Returns JSON: { success, doc_id, filename, text_length, message }
     """
+    # Defense in depth: the route is only mounted when uploads are enabled,
+    # but a stale worker or alternate URLconf must never accept uploads.
+    if not settings.UPLOADS_ENABLED:
+        return JsonResponse({
+            'success': False,
+            'error': 'Uploads are disabled.'
+        }, status=404)
     try:
         # Check if file was uploaded
         if 'file' not in request.FILES:
