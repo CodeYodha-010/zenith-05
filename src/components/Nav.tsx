@@ -61,8 +61,6 @@ export default function Nav() {
             </span>
             <a
               href={CHAT_URL || '/'}
-              target={CHAT_URL ? "_blank" : undefined}
-              rel="noreferrer"
               className="stamp text-[#e8a23a] hover:text-black hover:bg-[#e8a23a] hover:-rotate-2 text-xs font-medium px-5 py-2.5 transition-all duration-200"
             >
               Launch App
