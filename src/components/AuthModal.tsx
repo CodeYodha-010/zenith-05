@@ -168,7 +168,7 @@ export default function AuthModal() {
           </button>
 
           <p className="font-mono-j text-[9px] tracking-[0.2em] uppercase text-white/30 text-center">
-            Session secured by Django · HttpOnly cookie
+            Session secured by Supabase Auth · JWT protected
           </p>
         </form>
       </div>
