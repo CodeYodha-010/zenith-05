@@ -1,0 +1,45 @@
+# ==============================================================================
+# Knowledge-base build / ingest requirements (local development only)
+# ==============================================================================
+# The deployment serving set lives in requirements.txt and is pulled in below.
+# Everything here is needed only to rebuild the knowledge base or to parse user
+# uploads with UPLOADS_ENABLED=True on a workstation. The Hugging Face Space
+# installs requirements.txt alone and does not need any of this.
+#
+#   pip install -r requirements.txt -r requirements-build.txt
+#
+# Then:
+#   python manage.py build_knowledge_base
+#
+# After a rebuild, refresh the Space seed and checksums:
+#   1. copy the new db.sqlite3 / faiss_index.index into hf_space/hf_seed/
+#   2. regenerate hf_seed/SHA256SUMS
+#   3. run python hf_seed/verify_seed.py
+
+-r requirements.txt
+
+# --- PDF / DOCX / image parsing for ingestion ---
+pymupdf>=1.23.0
+opendataloader-pdf>=2.5.0
+pdf2image>=1.17.0
+Pillow>=11.0.0
+python-docx>=1.1.0
+
+# --- Chunking + progress for the builder ---
+langchain-text-splitters>=0.3.0
+tqdm>=4.66.0
+
+# --- Optional: PostgreSQL instead of SQLite (set DJANGO_DB_ENGINE) ---
+psycopg[binary]>=3.2.0
+
+# --- Optional: htmx. Installed locally and referenced by settings, but no
+#     template currently uses hx-* attributes. The serving set omits it. ---
+django-htmx>=1.17.0
+
+# --- Dropped entirely: these were listed in the original requirements.txt but
+#     are not imported anywhere in rag_app/. sentence-transformers was the
+#     single largest dependency because it pulls in torch.
+# sentence-transformers>=2.2.2
+# scikit-learn>=1.3.0
+# fuzzywuzzy>=0.18.0
+# python-levenshtein>=0.22.0

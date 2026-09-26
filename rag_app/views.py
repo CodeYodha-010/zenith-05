@@ -639,8 +639,10 @@ def clear_knowledge_base(request):
 # DOCUMENT UPLOAD HANDLER
 # ============================================================================
 
+# Upload parser imports (pymupdf / opendataloader) are deliberately NOT
+# imported here. The deployment serving set omits those packages, and a
+# module-level import would break Django startup. Loaded on demand instead.
 import uuid
-from .utils.document_parser import DocumentParser
 
 
 MAX_UPLOAD_SIZE = 20 * 1024 * 1024  # 20MB
@@ -738,6 +740,7 @@ def upload_document(request):
                 }, status=400)
         
         # Parse the document
+        from .utils.document_parser import DocumentParser
         parser = DocumentParser()
         result = parser.parse_file(uploaded_file)
         

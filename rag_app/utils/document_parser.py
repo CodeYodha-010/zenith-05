@@ -9,7 +9,6 @@ Supports:
 
 import logging
 import io
-import fitz  # PyMuPDF
 from typing import Dict, Optional
 from django.conf import settings
 
@@ -139,6 +138,8 @@ class DocumentParser:
     def _extract_text_pymupdf(self, file_bytes):
         """Extract text using PyMuPDF."""
         try:
+            import fitz  # lazy: not part of the deployment serving set
+
             doc = fitz.open(stream=file_bytes, filetype='pdf')
             text_parts = []
             
@@ -166,6 +167,8 @@ class DocumentParser:
                 return ''
             
             # For PDF, convert each page to image and OCR
+            import fitz  # lazy: not part of the deployment serving set
+
             doc = fitz.open(stream=file_bytes, filetype='pdf')
             text_parts = []
             
