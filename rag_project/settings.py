@@ -29,7 +29,11 @@ FIRECRAWL_API_KEY = os.getenv('FIRECRAWL_API_KEY')
 # Embeddings (nemotron-3-embed-1b) and OCR remain on NVIDIA.
 OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY')
 OPENROUTER_API_URL = os.getenv('OPENROUTER_API_URL', 'https://openrouter.ai/api/v1')
-OPENROUTER_MODEL = os.getenv('OPENROUTER_MODEL', 'openai/gpt-oss-20b:free')
+# openrouter/free = OpenRouter's free-model router. Individual free slugs
+# (e.g. openai/gpt-oss-20b:free) get retired without notice, which 404s the
+# LLM step; the router avoids maintaining slugs by hand.
+OPENROUTER_MODEL = os.getenv('OPENROUTER_MODEL', 'openrouter/free')
+
 
 # Authentication mode: django (rollback-compatible) or supabase.
 AUTH_MODE = os.getenv('AUTH_MODE', 'django').strip().lower()

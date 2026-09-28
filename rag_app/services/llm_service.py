@@ -69,7 +69,10 @@ class NVIDIALLMService:
             "messages": messages,
             "max_tokens": max_tokens,
             "temperature": temperature,
-            "stream": False
+            "stream": False,
+            # openrouter/free routes to reasoning models; reasoning tokens
+            # count against max_tokens and can leave content empty.
+            "reasoning": {"enabled": False}
         }
         
         for attempt in range(retry_count):
@@ -83,7 +86,14 @@ class NVIDIALLMService:
                 
                 if response.status_code == 200:
                     result = response.json()
-                    return result['choices'][0]['message']['content'].strip()
+                    content = result['choices'][0]['message'].get('content') or ''
+                    content = content.strip()
+                    if content:
+                        return content
+                    # Empty content (reasoning exhausted budget) -> retry
+                    print(f"Empty LLM content, attempt {attempt + 1}/{retry_count}, retrying...")
+                    time.sleep(2)
+                    continue
                 
                 error_data = response.json()
                 error_detail = error_data.get('detail', str(error_data))
@@ -127,6 +137,9 @@ class NVIDIALLMService:
             "messages": [{"role": "user", "content": prompt}],
             "max_tokens": max_tokens,
             "temperature": 0.1,
+            # openrouter/free routes to reasoning models; reasoning tokens
+            # count against max_tokens and can leave content empty.
+            "reasoning": {"enabled": False}
         }
         async with httpx.AsyncClient(
             timeout=httpx.Timeout(120.0, connect=30.0),
@@ -150,7 +163,11 @@ class NVIDIALLMService:
                     raise httpx.HTTPStatusError(error_msg, request=resp.request, response=resp)
 
                 data = resp.json()
-                return data["choices"][0]["message"]["content"]
+                content = data["choices"][0]["message"].get("content") or ""
+                if not content.strip():
+                    # Empty content (reasoning exhausted budget) -> tenacity retries
+                    raise ValueError("Empty LLM content (reasoning budget exhausted)")
+                return content
                 
             except httpx.HTTPStatusError as e:
                 # Let tenacity retry
@@ -250,7 +267,10 @@ Please provide a clear, easy-to-understand answer to the user's question based o
             "messages": messages,
             "max_tokens": max_tokens,
             "temperature": temperature,
-            "stream": True
+            "stream": True,
+            # openrouter/free routes to reasoning models; reasoning tokens
+            # count against max_tokens and can leave content empty.
+            "reasoning": {"enabled": False}
         }
         
         try:

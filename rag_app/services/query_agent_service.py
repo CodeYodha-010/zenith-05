@@ -75,7 +75,12 @@ class QueryAgentService:
             context_window=128000,
             timeout=300.0,
             http_client=self._httpx_client,
-            additional_kwargs={"top_p": 0.95}
+            # reasoning disabled: openrouter/free may route to reasoning
+            # models whose thinking tokens eat the output budget.
+            # extra_body -> merged into the JSON request by the OpenAI SDK
+            # (passing "reasoning" directly raises TypeError in create()).
+            additional_kwargs={"top_p": 0.95,
+                               "extra_body": {"reasoning": {"enabled": False}}}
         )
 
     def _should_use_web(self, query: str, context: str, faiss_score: float = 1.0) -> bool:

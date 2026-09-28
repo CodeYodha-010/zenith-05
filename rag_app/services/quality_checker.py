@@ -165,7 +165,8 @@ ANSWERING RULES:
 - Answer ONLY with the word 'VALID' or 'INVALID'."""
 
     try:
-        response = llm_service.generate(prompt, max_tokens=10, temperature=0.0)
+        response = llm_service.generate(prompt, max_tokens=256, temperature=0.0)
+
         response_clean = response.strip().upper()
 
         if "VALID" in response_clean and "INVALID" not in response_clean:

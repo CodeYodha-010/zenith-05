@@ -74,10 +74,11 @@ wait ~60s between harness runs.
 
 ## Known issues
 
-- OpenRouter free-tier model (`openai/gpt-oss-20b:free`) intermittently
-  returns "model unavailable for free" — answers fail at the LLM step.
-  Unrelated to security work; resolve by pinning a different
-  `OPENROUTER_MODEL` in `.env` or topping up the OpenRouter account.
+- ~~OpenRouter free-tier model (`openai/gpt-oss-20b:free`) intermittently
+  returns "model unavailable for free"~~ **Resolved:** `OPENROUTER_MODEL`
+  now defaults to `openrouter/free` (OpenRouter's free-model router), which
+  picks a live free model per request instead of pinning a slug that can be
+  retired without notice.
 
 ## Phase 4 - production packaging runbook
 
