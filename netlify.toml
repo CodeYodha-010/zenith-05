@@ -1,0 +1,29 @@
+# =============================================================================
+# Netlify build + proxy config for the Zenith landing page.
+#
+# One repository, two deploys:
+#   Render  -> reads the repository ROOT (Django)  - this file does not apply
+#   Netlify -> reads frontend/ (React)             - base/command/publish below
+# =============================================================================
+
+[build]
+  base = "frontend"
+  command = "npm run build:prod"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Same-origin API proxy: the browser only talks to the Netlify domain and
+# Netlify forwards /api/* to Django on Render. This mirrors the Vite dev
+# proxy (frontend/vite.config.ts), which is why no CORS configuration is
+# needed anywhere.
+#
+# >>> BEFORE YOUR FIRST DEPLOY: replace YOUR-SERVICE below with your Render
+#     service name (Render dashboard -> service -> copy the
+#     *.onrender.com address). See docs/DEPLOYMENT.md. <<<
+[[redirects]]
+  from = "/api/*"
+  to = "https://YOUR-SERVICE.onrender.com/api/:splat"
+  status = 200
+  force = true
