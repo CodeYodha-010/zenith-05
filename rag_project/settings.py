@@ -68,9 +68,14 @@ ALLOWED_HOSTS = [h.strip() for h in os.getenv(
 ).split(',') if h.strip()]
 
 # React landing page (Vite dev server) may POST authenticated forms to us.
+# Production adds its own origins (comma-separated) via
+# DJANGO_CSRF_TRUSTED_ORIGINS, e.g. https://your-site.netlify.app
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
+] + [
+    o.strip() for o in os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',')
+    if o.strip()
 ]
 
 # HTTPS detection behind a reverse proxy. Only enable when the app is
