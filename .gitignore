@@ -2,6 +2,9 @@
 .env
 .env.*
 !.env.example
+# frontend/.env.production holds only public Vite placeholders
+# (VITE_APP_URL / VITE_SUPABASE_*), never secrets — tracked on purpose.
+!.env.production
 *.pem
 *.key
 
