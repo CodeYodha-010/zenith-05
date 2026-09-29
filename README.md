@@ -30,10 +30,29 @@ rag_app/               The application
   services/            LLM, embeddings, FAISS, cache, web search, OCR
   templates/           Chat UI (Form Z-1 theme: warm ink + gold)
   static/rag_app/      CSS/JS for the chat UI
+frontend/              React landing page (Vite + TypeScript + Tailwind)
+  src/                 Components, API client, Supabase session
+  vite.config.ts       Dev proxy: /api → Django on :8000
 scripts/               acceptance_test.py — the 25-check security harness
 docs/                  SECURITY-BASELINE.md · DEPLOYMENT.md
+netlify.toml           Netlify build (base=frontend) + /api proxy to Render
 Knowlegebase/          Source PDFs (gitignored; rebuild via build_knowledge_base)
 ```
+
+## Deployment targets
+
+One repository, two independent deploys — each platform builds only its own
+half:
+
+| Piece | Platform | Reads from |
+|---|---|---|
+| Django API (chat, retrieval, auth) | Render (free web service) | repo root |
+| Landing page (this React app) | Netlify (free) | `frontend/` via `netlify.toml` |
+| Auth + database | Supabase | — |
+
+Netlify proxies `/api/*` to the Render service URL, so the browser only ever
+talks to one origin — the same design as the Vite dev proxy, which means no
+CORS configuration anywhere. Exact setup steps live in `docs/DEPLOYMENT.md`.
 
 ## Quick start
 
@@ -44,7 +63,15 @@ python manage.py migrate
 python manage.py runserver    # http://localhost:8000
 ```
 
-The React landing page lives on the `landing` branch of this repository (`npm run dev` on Vite, proxies `/api` to Django; see its own README there).
+The React landing page lives in `frontend/`:
+
+```bash
+cd frontend
+npm ci
+npm run dev    # Vite on :5173, proxies /api to Django on :8000
+```
+
+See `frontend/README.md` for its own commands, env vars, and deploy notes.
 
 ## Security posture
 
