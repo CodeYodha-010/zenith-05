@@ -39,3 +39,5 @@ _ul
 *.bak
 .DS_Store
 Thumbs.db
+# Corpus export for Neon upload (regenerate with manage.py export_corpus)
+/export/
