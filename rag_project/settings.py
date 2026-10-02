@@ -160,8 +160,17 @@ if os.getenv('DJANGO_DB_ENGINE'):
             'PASSWORD': os.getenv('DJANGO_DB_PASSWORD', ''),
             'HOST': os.getenv('DJANGO_DB_HOST', ''),
             'PORT': os.getenv('DJANGO_DB_PORT', ''),
+            # Neon requires TLS; `sslmode=require` is the floor, never disable it.
+            # Migrations/sync must use the DIRECT endpoint — pgbouncer (pooler)
+            # does not reliably run DDL/transactions (see docs/DEPLOYMENT.md).
+            'OPTIONS': {'sslmode': os.getenv('DJANGO_DB_SSLMODE', 'require')},
         }
     }
+    # Boot-time proof of which database we are attached to (password never logged).
+    print(
+        f"[db] Postgres engine={os.getenv('DJANGO_DB_ENGINE')} "
+        f"host={DATABASES['default']['HOST']} name={DATABASES['default']['NAME']}"
+    )
 else:
     DATABASES = {
         'default': {

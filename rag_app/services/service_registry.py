@@ -29,6 +29,13 @@ _faiss_service = None
 def get_faiss_service():
     global _faiss_service
     if _faiss_service is None:
+        # On Postgres the production path ranks via pgvector (vector_store.py);
+        # the FAISS file does not exist there, so skip loading it entirely
+        # (also saves ~60-100 MB RSS per gunicorn worker).
+        from django.db import connection
+        if connection.vendor == 'postgresql':
+            logger.info("Postgres/pgvector active — FAISS file not loaded")
+            return None
         try:
             _faiss_service = FAISSService()
             _faiss_service.load('faiss_index.index')

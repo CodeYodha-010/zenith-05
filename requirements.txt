@@ -22,9 +22,6 @@
 #       (UPLOADS_ENABLED=False). opendataloader-pdf also requires a JRE.
 #   llama-index-tools-tavily-research
 #       Not imported; web search uses the tavily-python client directly.
-#   psycopg[binary]
-#       Only needed if DJANGO_DB_ENGINE points at PostgreSQL; the Space runs
-#       SQLite from hf_seed/.
 #
 # NOTE: django-htmx stays below even though no template uses hx-* attributes,
 # because it is referenced by INSTALLED_APPS and MIDDLEWARE and Django imports
@@ -50,6 +47,10 @@ django-htmx>=1.17.0
 faiss-cpu==1.13.2
 rank-bm25>=0.2
 numpy>=1.24.0
+
+# --- Postgres driver (Render -> Neon). Local dev keeps working on SQLite;
+# --- this is only imported when DJANGO_DB_ENGINE points at PostgreSQL. ---
+psycopg[binary]>=3.2.0
 
 # --- LLM + embeddings (NVIDIA / OpenRouter via LlamaIndex adapters) ---
 llama-index-core==0.14.20

@@ -3,6 +3,7 @@ import re
 import numpy as np
 from typing import List, Dict, Tuple, Any
 
+from django.db import connection as db_connection
 from django.db.models import Q
 from .models import Document, DocumentPage, SearchIndex, DocumentMetadata, FactIndex
 from .services.llm_service import NVIDIALLMService
@@ -192,12 +193,18 @@ def _multi_source_retrieve(query: str, region: str = None, understood: Dict = No
             relevant_doc_ids.add(f.page.document_id)
             fact_context += f"- {f.subject}: {f.value} ({f.fact_type}). Source: {f.page.document.title}\n"
 
-    # ── SOURCE 3: Semantic/Vector Search — FAISS indexed chunks ──
+    # ── SOURCE 3: Semantic/Vector Search — FAISS (SQLite) / pgvector (Postgres) ──
+    on_postgres = db_connection.vendor == 'postgresql'
+
     qs = SearchIndex.objects.filter(source_type='chunk').select_related('page__document')
     if region and region in ('eu', 'india', 'us'):
         qs = qs.filter(page__document__region=region)
 
-    all_chunk_ids = list(SearchIndex.objects.filter(source_type='chunk').order_by('id').values_list('id', flat=True))
+    if not on_postgres:
+        # Positional map FAISS row -> chunk id (id-sorted; rebuild with the same
+        # order in prune_documents). Not needed on Postgres: vector_search()
+        # returns chunk ids directly and skips this per-query full-table fetch.
+        all_chunk_ids = list(SearchIndex.objects.filter(source_type='chunk').order_by('id').values_list('id', flat=True))
     
     top_chunks = []
     boosted_candidates = []
@@ -207,28 +214,34 @@ def _multi_source_retrieve(query: str, region: str = None, understood: Dict = No
         logger.warning("⚠️ Embedding model unavailable")
     else:
         query_emb = emb_model.embed_query(query)
-        f_service = get_faiss_service()
-        
-        if query_emb and f_service:
+
+        id_scores = {}   # chunk_id -> dense score, from either backend
+        if query_emb:
             query_emb = np.array(query_emb, dtype=np.float32)
             query_emb = query_emb / np.linalg.norm(query_emb)
-            
-            D, I = f_service.search(query_emb.reshape(1, -1), k=50)
-            I = I.flatten().tolist()
-            chunk_ids = [all_chunk_ids[i] for i in I if i < len(all_chunk_ids)]
-            candidates = list(qs.filter(id__in=chunk_ids))
-            
-            id_to_faiss_idx = {chunk_id: idx for idx, chunk_id in enumerate(all_chunk_ids)}
-            faiss_scores = {i: float(D[0][idx]) for idx, i in enumerate(I) if i < len(all_chunk_ids)}
-            
+
+            if on_postgres:
+                from .services.vector_store import vector_search
+                id_scores = dict(vector_search(query_emb, k=50))
+            else:
+                f_service = get_faiss_service()
+                if f_service:
+                    D, I = f_service.search(query_emb.reshape(1, -1), k=50)
+                    I = I.flatten().tolist()
+                    id_scores = {all_chunk_ids[row]: float(D[0][idx])
+                                 for idx, row in enumerate(I) if row < len(all_chunk_ids)}
+
+        if id_scores:
+            candidates = list(qs.filter(id__in=id_scores.keys()))
+
             for chunk in candidates:
-                faiss_idx = id_to_faiss_idx.get(chunk.id)
-                if faiss_idx is not None and faiss_idx in faiss_scores:
-                    score = faiss_scores[faiss_idx]
-                    doc_boost = 1.5 if chunk.page.document_id in relevant_doc_ids else 1.0
-                    kw_boost = _keyword_boost_score(chunk.content)
-                    final_score = score * min(kw_boost, 2.0) * doc_boost
-                    boosted_candidates.append((chunk, final_score))
+                score = id_scores.get(chunk.id)
+                if score is None:
+                    continue
+                doc_boost = 1.5 if chunk.page.document_id in relevant_doc_ids else 1.0
+                kw_boost = _keyword_boost_score(chunk.content)
+                final_score = score * min(kw_boost, 2.0) * doc_boost
+                boosted_candidates.append((chunk, final_score))
             
             boosted_candidates.sort(key=lambda x: x[1], reverse=True)
             
