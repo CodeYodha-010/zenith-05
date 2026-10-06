@@ -23,23 +23,6 @@ class NVIDIALLMService:
         self.api_url = settings.OPENROUTER_API_URL
         self.model = settings.OPENROUTER_MODEL
     
-    def get_llamaindex_llm(self):
-        """Returns a LlamaIndex-compatible LLM object pointed at OpenRouter."""
-        try:
-            from llama_index.llms.openai_like import OpenAILike
-            return OpenAILike(
-                model=self.model,
-                api_key=self.api_key,
-                api_base=self.api_url,
-                is_chat_model=True,
-                temperature=0.4,
-                max_tokens=2000,
-                timeout=300.0,
-            )
-        except ImportError:
-            logger.error("❌ llama-index-llms-openai-like not installed.")
-            return None
-    
     def generate(self, prompt, system_prompt=None, temperature=0.4, max_tokens=1024, retry_count=3):
         # IMPROVEMENT: Increase temperature from 0.1 to 0.4
         # WHY: Trade compliance expert persona needs more helpfulness and detail

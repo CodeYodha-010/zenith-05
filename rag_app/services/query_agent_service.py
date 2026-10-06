@@ -7,7 +7,6 @@ from typing import List, Dict, Any, Optional, Tuple
 
 import httpx
 from django.conf import settings
-from llama_index.llms.openai_like import OpenAILike
 from asgiref.sync import sync_to_async
 
 from .service_registry import get_qa
@@ -48,6 +47,141 @@ QUERY_REWRITE_PATTERNS = {
     ],
 }
 
+class OpenRouterLLM:
+    """
+    Drop-in replacement for llama_index.llms.openai_like.OpenAILike.
+
+    OpenRouter speaks the OpenAI chat-completions protocol, so a plain httpx
+    POST covers what ask()/stream_ask() use. Removing the LlamaIndex LLM
+    adapter kills the transformers -> torch import (+294 MB RSS at first
+    question), which is what lets the Render free tier (512 MB) hold the app.
+
+    Contract kept identical to the four call sites:
+        resp = await llm.acomplete(prompt)         # str(resp) -> answer text
+        gen  = await llm.astream_complete(prompt)  # gen yields .delta chunks
+
+    Reasoning stays disabled in every payload (see NVIDIALLMService.generate):
+    openrouter/free may route to reasoning models whose thinking tokens eat
+    the output budget and leave content empty.
+    """
+
+    def __init__(self, model, api_key, api_base, http_client,
+                 temperature=1.0, max_tokens=8192, top_p=0.95):
+        self.model = model
+        self.api_key = api_key
+        self.api_base = api_base.rstrip('/')
+        self._client = http_client
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+        self.top_p = top_p
+
+    def _headers(self):
+        return {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+
+    def _payload(self, prompt, stream):
+        return {
+            "model": self.model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens,
+            "top_p": self.top_p,
+            "stream": stream,
+            "reasoning": {"enabled": False},
+        }
+
+    def _raise_for_status(self, status_code, body):
+        """Mirror the friendly errors of NVIDIALLMService.generate()."""
+        if status_code == 401:
+            raise Exception("Invalid API key. Please check OPENROUTER_API_KEY in .env")
+        if status_code == 429:
+            raise Exception("Rate limit exceeded. Please wait and try again.")
+        if 'not found' in str(body).lower():
+            raise Exception(
+                f"Model not found: {self.model}. Please check available models.")
+        raise Exception(f"LLM API error (HTTP {status_code}): {str(body)[:300]}")
+
+    async def acomplete(self, prompt, **kwargs):
+        """Single completion; str(result) is the raw answer text."""
+        url = f"{self.api_base}/chat/completions"
+        content = ""
+        for attempt in range(3):
+            try:
+                resp = await self._client.post(
+                    url, headers=self._headers(),
+                    json=self._payload(prompt, False))
+            except httpx.TimeoutException as e:
+                raise asyncio.TimeoutError("LLM request timed out") from e
+            if resp.status_code != 200:
+                self._raise_for_status(resp.status_code, resp.text)
+            data = resp.json()
+            choices = data.get("choices") or []
+            content = ""
+            if choices:
+                content = (choices[0].get("message") or {}).get("content") or ""
+            if content.strip():
+                return OpenRouterCompletion(content)
+            logger.warning(
+                f"Empty LLM content, attempt {attempt + 1}/3, retrying...")
+            await asyncio.sleep(2)
+        # All attempts empty: return what we have, like the old adapter did.
+        return OpenRouterCompletion(content)
+
+    async def astream_complete(self, prompt, **kwargs):
+        """Awaited like the LlamaIndex API: returns an async chunk iterator."""
+        return self._stream_chat(prompt)
+
+    async def _stream_chat(self, prompt):
+        url = f"{self.api_base}/chat/completions"
+        try:
+            async with self._client.stream(
+                    "POST", url, headers=self._headers(),
+                    json=self._payload(prompt, True)) as resp:
+                if resp.status_code != 200:
+                    body = (await resp.aread()).decode("utf-8", "replace")
+                    self._raise_for_status(resp.status_code, body)
+                async for line in resp.aiter_lines():
+                    if not line.startswith("data:"):
+                        continue
+                    data_str = line[5:].strip()
+                    if data_str == "[DONE]":
+                        break
+                    try:
+                        data = json.loads(data_str)
+                    except json.JSONDecodeError:
+                        continue
+                    if data.get("error"):
+                        raise Exception(f"LLM API error: {data['error']}")
+                    choices = data.get("choices") or []
+                    if not choices:
+                        continue
+                    delta = choices[0].get("delta") or {}
+                    if delta.get("content"):
+                        yield OpenRouterChunk(delta["content"])
+        except httpx.TimeoutException as e:
+            raise asyncio.TimeoutError("LLM streaming timed out") from e
+
+
+class OpenRouterCompletion:
+    """str() returns the answer text -- the contract ask()'s call sites use."""
+
+    def __init__(self, text):
+        self.text = text
+
+    def __str__(self):
+        return self.text
+
+
+class OpenRouterChunk:
+    """Single streamed delta -- .delta is what stream_ask() serializes."""
+
+    __slots__ = ("delta",)
+
+    def __init__(self, delta):
+        self.delta = delta
+
 class QueryAgentService:
     """
     High-Efficiency Agentic RAG Service.
@@ -65,22 +199,19 @@ class QueryAgentService:
         self._httpx_client = httpx.AsyncClient(
             timeout=httpx.Timeout(connect=60.0, read=300.0, write=60.0, pool=60.0)
         )
-        self.llm = OpenAILike(
+        # OpenRouter via a direct httpx client (OpenRouterLLM): identical
+        # request shape to the old OpenAILike adapter, but no llama-index LLM
+        # import, so no transformers/torch (+294 MB RSS) at first question.
+        # The 300 s read timeout comes from self._httpx_client above and
+        # reasoning is disabled inside the payload (see OpenRouterLLM).
+        self.llm = OpenRouterLLM(
             model=self.model,
             api_key=self.api_key,
             api_base=self.base_url,
-            is_chat_model=True,
+            http_client=self._httpx_client,
             temperature=1.0,
             max_tokens=8192,
-            context_window=128000,
-            timeout=300.0,
-            http_client=self._httpx_client,
-            # reasoning disabled: openrouter/free may route to reasoning
-            # models whose thinking tokens eat the output budget.
-            # extra_body -> merged into the JSON request by the OpenAI SDK
-            # (passing "reasoning" directly raises TypeError in create()).
-            additional_kwargs={"top_p": 0.95,
-                               "extra_body": {"reasoning": {"enabled": False}}}
+            top_p=0.95,
         )
 
     def _should_use_web(self, query: str, context: str, faiss_score: float = 1.0) -> bool:
