@@ -143,9 +143,9 @@ For a managed Postgres (e.g. Neon), add `psycopg[binary]` to
 
 ### Step 2 — Landing page on Netlify
 
-1. **Edit `netlify.toml`** (repository root): replace `YOUR-SERVICE` in the
-   `[[redirects]]` block with your Render name, then commit — this is the
-   `/api` proxy target.
+1. **Check `netlify.toml`** (repository root): the `[[redirects]]` block
+   proxies `/api/*` to `https://zenith-backend.onrender.com/api/:splat`.
+   Commit if you change the host (e.g. after renaming the Render service).
 2. **app.netlify.com → Add new site → Import from Git** →
    `CodeYodha-010/zenith-05` → branch `main`. Build settings are taken from
    `netlify.toml` automatically (base `frontend`, `npm run build:prod`,

@@ -19,11 +19,10 @@
 # proxy (frontend/vite.config.ts), which is why no CORS configuration is
 # needed anywhere.
 #
-# >>> BEFORE YOUR FIRST DEPLOY: replace YOUR-SERVICE below with your Render
-#     service name (Render dashboard -> service -> copy the
-#     *.onrender.com address). See docs/DEPLOYMENT.md. <<<
+# Backend target: the Render service named zenith-backend. If the service
+# is renamed or recreated, update the host in `to` below. See DEPLOYMENT.md.
 [[redirects]]
   from = "/api/*"
-  to = "https://YOUR-SERVICE.onrender.com/api/:splat"
+  to = "https://zenith-backend.onrender.com/api/:splat"
   status = 200
   force = true
