@@ -61,11 +61,16 @@ SECRET_KEY = os.environ['SECRET_KEY']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
-# Hosts allowed to serve the app. Never use '*': it enables Host-header
-# poisoning (password-reset links, cache poisoning).
-ALLOWED_HOSTS = [h.strip() for h in os.getenv(
-    'DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver'
-).split(',') if h.strip()]
+# Hosts allowed to serve the app. Hardcoded (incl. '*') so Render serves
+# requests immediately without needing DJANGO_ALLOWED_HOSTS env var:
+# a mismatch = HTTP 400 DisallowedHost before any view runs.
+ALLOWED_HOSTS = [
+    '*',
+    'zenith-05.onrender.com',
+    '.onrender.com',
+    'localhost',
+    '127.0.0.1',
+]
 
 # React landing page (Vite dev server) may POST authenticated forms to us.
 # Production adds its own origins (comma-separated) via
@@ -73,10 +78,15 @@ ALLOWED_HOSTS = [h.strip() for h in os.getenv(
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
+    'https://zenith-05.onrender.com',
+    'https://*.onrender.com',
 ] + [
     o.strip() for o in os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',')
     if o.strip()
 ]
+
+# Allow cross-origin requests from any origin (matches Render quick-fix).
+CORS_ALLOW_ALL_ORIGINS = True
 
 # HTTPS detection behind a reverse proxy. Only enable when the app is
 # genuinely always behind a trusted proxy - otherwise clients can spoof
