@@ -80,6 +80,9 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:5173',
     'https://zenith-05.onrender.com',
     'https://*.onrender.com',
+    # Netlify site proxies /api/* to us: the browser Origin header stays
+    # the Netlify domain, so Django CSRF must trust it or every POST 403s.
+    'https://*.netlify.app',
 ] + [
     o.strip() for o in os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',')
     if o.strip()
