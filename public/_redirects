@@ -1,0 +1,5 @@
+# One-origin proxy: static landing files win, everything else goes to the
+# Django backend on Render. /chat is the post-login chat page (VITE_APP_URL=/chat).
+/chat      https://zenith-05.onrender.com/         200
+/chat/*    https://zenith-05.onrender.com/:splat   200
+/*         https://zenith-05.onrender.com/:splat   200
