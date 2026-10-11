@@ -1,10 +1,9 @@
-# =============================================================================
+# ============================================================================
 # Netlify build + proxy config for the Zenith landing page.
-#
 # One repository, two deploys:
 #   Render  -> reads the repository ROOT (Django)  - this file does not apply
 #   Netlify -> reads frontend/ (React)             - base/command/publish below
-# =============================================================================
+# ============================================================================
 
 [build]
   base = "frontend"
@@ -14,15 +13,30 @@
 [build.environment]
   NODE_VERSION = "20"
 
-# Same-origin API proxy: the browser only talks to the Netlify domain and
-# Netlify forwards /api/* to Django on Render. This mirrors the Vite dev
-# proxy (frontend/vite.config.ts), which is why no CORS configuration is
-# needed anywhere.
+# One-origin design: the browser only ever talks to the Netlify domain, so
+# the Django session cookie set when the user logs in on the landing page
+# is still sent when the chat page loads (same host). This mirrors the Vite
+# dev proxy. The chat is entered at /chat (VITE_APP_URL=/chat), which maps
+# to the Django chat page at Render "/".
 #
-# Backend target: the Render service named zenith-05. If the service
-# is renamed or recreated, update the host in `to` below. See DEPLOYMENT.md.
+#   /chat       -> Django chat page (Render "/")
+#   /chat/*     -> any sub-path of the chat app
+#   /*          -> everything else: /api/*, /ask/*, /search/*, /static/*,
+#                  /healthz/ ... (landing static files still win first)
+#
+# force is OFF on purpose: Netlify serves any matching file from dist/
+# before applying redirects, so landing assets are never proxied away.
 [[redirects]]
-  from = "/api/*"
-  to = "https://zenith-05.onrender.com/api/:splat"
+  from = "/chat"
+  to = "https://zenith-05.onrender.com/"
   status = 200
-  force = true
+
+[[redirects]]
+  from = "/chat/*"
+  to = "https://zenith-05.onrender.com/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "https://zenith-05.onrender.com/:splat"
+  status = 200

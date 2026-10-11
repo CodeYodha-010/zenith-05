@@ -14,8 +14,15 @@ export interface ApiResult<T = unknown> {
   data: T;
 }
 
+// Backend origin for the "Launch console" link and the post-login redirect.
+// Local dev falls back to the Django runserver port. Production builds must
+// never bake a localhost URL into the bundle: a misconfigured deploy once
+// sent every logged-in user to the local dev server, which resolves on no
+// visitor's machine (ERR_NAME_NOT_RESOLVED). The production fallback is ''
+// so CHAT_URL degrades to same-origin '/' instead of a dead host.
 export const APP_URL: string =
-  (import.meta.env.VITE_APP_URL as string | undefined) ?? 'http://localhost:8000';
+  (import.meta.env.VITE_APP_URL as string | undefined) ??
+  (import.meta.env.DEV ? 'http://localhost:8000' : '');
 export const CHAT_URL: string = APP_URL || '/';
 
 function getCookie(name: string): string | null {

@@ -50,7 +50,7 @@ from .api_auth import require_login_json, require_staff_json, throttle
 logger = logging.getLogger('rag_pipeline')
 
 
-@require_http_methods(['GET'])
+@require_http_methods(['GET', 'HEAD'])
 def healthz(request):
     """Unauthenticated liveness endpoint for container/Space health checks."""
     return JsonResponse({'status': 'ok', 'service': 'zenith'})
