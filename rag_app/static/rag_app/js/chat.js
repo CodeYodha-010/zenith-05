@@ -128,7 +128,9 @@
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(async () => {
                 try {
-                    const response = await fetch(`/suggestions/?q=${encodeURIComponent(query)}&limit=6`);
+                    const response = await fetch(`/suggestions/?q=${encodeURIComponent(query)}&limit=6`, {
+                        headers: await getAuthHeaders(),
+                    });
                     const data = await response.json();
                     if (data.success && data.suggestions.length > 0) {
                         renderSuggestions(data.suggestions, query);

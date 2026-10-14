@@ -67,7 +67,7 @@ def verify_supabase_token(request) -> SupabasePrincipal | None:
         claims = jwt.decode(
             token,
             signing_key.key,
-            algorithms=["RS256"],
+            algorithms=["RS256", "ES256"],   # ES256: Supabase project keys are EC (JWKS alg=ES256)
             audience=settings.SUPABASE_JWT_AUDIENCE,
             issuer=f"{settings.SUPABASE_URL}/auth/v1",
             options={"require": ["exp", "iat", "sub"]},
