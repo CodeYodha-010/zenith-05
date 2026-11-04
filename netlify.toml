@@ -16,8 +16,9 @@
 # One-origin design: the browser only ever talks to the Netlify domain, so
 # the Django session cookie set when the user logs in on the landing page
 # is still sent when the chat page loads (same host). This mirrors the Vite
-# dev proxy. The chat is entered at /chat (VITE_APP_URL=/chat), which maps
-# to the Django chat page at Render "/".
+# dev proxy. The chat is entered at the same-origin /chat path, which maps
+# to the Django chat page at Render "/". VITE_APP_URL remains the backend
+# wake-up URL; it must not be used as the chat navigation origin.
 #
 #   /chat       -> Django chat page (Render "/")
 #   /chat/*     -> any sub-path of the chat app

@@ -36,7 +36,7 @@ bundle is public):
 
 | Variable | Purpose |
 |---|---|
-| `VITE_APP_URL` | Django base URL. Feeds `CHAT_URL`, the "Launch console" link. Empty = `http://localhost:8000` fallback |
+| `VITE_APP_URL` | Django base URL used to wake the backend. Empty = `http://localhost:8000` in dev; empty in production |
 | `VITE_SUPABASE_URL` | Supabase project URL (Auth) |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase anon/publishable key |
 
@@ -51,6 +51,10 @@ The API client (`src/lib/api.ts`) always calls **relative** `/api/...` paths:
 - **Dev** — Vite proxies `/api` → `127.0.0.1:8000`
 - **Production** — Netlify proxies `/api/*` → the Render service URL
   (redirect configured in the repository-root `netlify.toml`)
+
+In production, the "Launch console" link always uses the same-origin `/chat`
+proxy. Do not point it directly at Render: the Supabase session is stored in
+the browser under the Netlify origin and is not available on Render's origin.
 
 Because the browser only ever talks to one origin, cookies and CSRF work
 without any CORS configuration.

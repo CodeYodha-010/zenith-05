@@ -153,7 +153,7 @@ For a managed Postgres (e.g. Neon), add `psycopg[binary]` to
 3. **Site configuration → Environment variables** (build-time, public):
    | Var | Value |
    |---|---|
-   | `VITE_APP_URL` | `https://zenith-backend.onrender.com` (the "Launch console" link) |
+   | `VITE_APP_URL` | `https://zenith-05.onrender.com` (backend wake-up URL; chat navigation remains same-origin at `/chat`) |
    | `VITE_SUPABASE_URL` | Supabase project URL |
    | `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable/anon key |
 4. **Deploy.** First build ≈ 2 minutes.
