@@ -51,14 +51,66 @@
 
     function getCsrfToken() { return getCookie('csrftoken'); }
 
-    function getSupabaseAccessToken() {
+    const SUPABASE_SESSION_KEY = 'zenith-supabase-auth';
+
+    function readSupabaseSession() {
         try {
-            const raw = localStorage.getItem('zenith-supabase-auth');
-            if (!raw) return null;
-            const parsed = JSON.parse(raw);
-            return parsed?.access_token || null;
+            const raw = localStorage.getItem(SUPABASE_SESSION_KEY);
+            return raw ? JSON.parse(raw) : null;
         } catch (err) {
             console.error('Supabase session read failed:', err);
+            return null;
+        }
+    }
+
+    function sessionExpiry(session) {
+        if (session?.expires_at) return session.expires_at; // epoch seconds
+        const segment = session?.access_token?.split('.')[1];
+        if (!segment) return 0;
+        try {
+            const json = JSON.parse(atob(segment.replace(/-/g, '+').replace(/_/g, '/')));
+            return json.exp || 0; // epoch seconds
+        } catch { return 0; }
+    }
+
+    async function getSupabaseAccessToken(csrfToken) {
+        const session = readSupabaseSession();
+        if (!session?.access_token) return null;
+
+        // Refresh a minute early so a slow request cannot cross the expiry.
+        const expiresAt = sessionExpiry(session);
+        if (expiresAt && expiresAt * 1000 > Date.now() + 60000) return session.access_token;
+        if (!session.refresh_token) return session.access_token;
+
+        try {
+            const res = await fetch('/api/auth/refresh/', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+                },
+                body: JSON.stringify({ refresh_token: session.refresh_token }),
+            });
+            if (!res.ok) {
+                console.warn('Supabase token refresh failed:', res.status);
+                return null;
+            }
+            const data = await res.json();
+            if (!data.access_token) return null;
+
+            const merged = {
+                ...session,
+                access_token: data.access_token,
+                refresh_token: data.refresh_token || session.refresh_token,
+                expires_in: data.expires_in || session.expires_in,
+                expires_at: data.expires_at || Math.floor(Date.now() / 1000) + (data.expires_in || 3600),
+                token_type: data.token_type || 'bearer',
+            };
+            localStorage.setItem(SUPABASE_SESSION_KEY, JSON.stringify(merged));
+            return merged.access_token;
+        } catch (err) {
+            console.error('Supabase token refresh error:', err);
             return null;
         }
     }
@@ -69,7 +121,7 @@
             await fetch('/api/auth/csrf/', { credentials: 'include' });
             csrfToken = getCsrfToken();
         }
-        const accessToken = getSupabaseAccessToken();
+        const accessToken = await getSupabaseAccessToken(csrfToken);
         return {
             ...extra,
             ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),

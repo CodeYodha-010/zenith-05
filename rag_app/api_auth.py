@@ -12,6 +12,8 @@ import logging
 import time
 from functools import wraps
 
+import httpx
+
 from django.conf import settings
 from django.core.cache import cache
 from django.http import JsonResponse
@@ -172,6 +174,71 @@ def _json_body(request) -> dict:
 def csrf(request):
     """Hand the client a csrftoken cookie."""
     return JsonResponse({'ok': True})
+
+
+@throttle('60/hour', 'refresh')
+@require_http_methods(['POST'])
+def supabase_refresh(request):
+    """Exchange a Supabase refresh_token for a fresh session.
+
+    The chat page is a plain Django template, so it cannot use supabase-js and
+    stores the session in localStorage itself. Without this endpoint an access
+    token older than one hour cannot be renewed and every gated call 401s.
+    The anon key stays server-side.
+    """
+    if settings.AUTH_MODE != 'supabase':
+        return JsonResponse(
+            {'success': False, 'error': 'Supabase auth is not enabled.'}, status=400
+        )
+
+    refresh_token = (_json_body(request).get('refresh_token') or '').strip()
+    if not refresh_token:
+        return JsonResponse(
+            {'success': False, 'error': 'refresh_token is required.'}, status=400
+        )
+    if not settings.SUPABASE_URL or not settings.SUPABASE_ANON_KEY:
+        logger.error(
+            'Supabase refresh unavailable: SUPABASE_URL/SUPABASE_ANON_KEY not set.'
+        )
+        return JsonResponse(
+            {'success': False, 'error': 'Server auth is misconfigured.'}, status=503
+        )
+
+    try:
+        resp = httpx.post(
+            f'{settings.SUPABASE_URL}/auth/v1/token',
+            params={'grant_type': 'refresh_token'},
+            headers={
+                'apikey': settings.SUPABASE_ANON_KEY,
+                'Content-Type': 'application/json',
+            },
+            json={'refresh_token': refresh_token},
+            timeout=10.0,
+        )
+    except httpx.HTTPError as exc:
+        logger.error('Supabase refresh request failed: %s', exc)
+        return JsonResponse(
+            {'success': False, 'error': 'Could not reach the auth provider.'}, status=502
+        )
+
+    if resp.status_code != 200:
+        logger.warning(
+            'Supabase refresh rejected: %s %s', resp.status_code, resp.text[:200]
+        )
+        return JsonResponse(
+            {'success': False, 'error': 'Session expired. Please sign in again.'},
+            status=401,
+        )
+
+    payload = resp.json()
+    return JsonResponse({
+        'success': True,
+        'access_token': payload.get('access_token'),
+        'refresh_token': payload.get('refresh_token') or refresh_token,
+        'expires_in': payload.get('expires_in'),
+        'expires_at': payload.get('expires_at'),
+        'token_type': payload.get('token_type', 'bearer'),
+    })
 
 
 @throttle('10/hour', 'register')
