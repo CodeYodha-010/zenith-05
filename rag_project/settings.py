@@ -37,8 +37,8 @@ OPENROUTER_MODEL = os.getenv('OPENROUTER_MODEL', 'openrouter/free')
 
 # Authentication mode: django (rollback-compatible) or supabase.
 AUTH_MODE = os.getenv('AUTH_MODE', 'django').strip().lower()
-SUPABASE_URL = os.getenv('SUPABASE_URL', '').rstrip('/')
-SUPABASE_ANON_KEY = os.getenv('SUPABASE_ANON_KEY', '')
+SUPABASE_URL = os.getenv('SUPABASE_URL', '').strip().rstrip('/')
+SUPABASE_ANON_KEY = os.getenv('SUPABASE_ANON_KEY', '').strip()
 SUPABASE_JWT_AUDIENCE = os.getenv('SUPABASE_JWT_AUDIENCE', 'authenticated')
 
 # Document upload feature flag. Safe by default: uploads are OFF unless the

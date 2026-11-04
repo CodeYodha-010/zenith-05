@@ -73,7 +73,12 @@ def verify_supabase_token(request) -> SupabasePrincipal | None:
             options={"require": ["exp", "iat", "sub"]},
         )
     except (jwt.PyJWTError, ValueError, RuntimeError) as exc:
-        logger.warning("Supabase token rejected: %s", exc)
+        logger.warning(
+            "Supabase token rejected: %s | SUPABASE_URL=%r | jwks=%s/auth/v1/.well-known/jwks.json",
+            exc,
+            settings.SUPABASE_URL,
+            settings.SUPABASE_URL,
+        )
         return None
 
     if claims.get("role") != "authenticated":
