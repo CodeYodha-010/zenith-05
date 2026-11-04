@@ -347,11 +347,25 @@ async def ask_question(request):
         return JsonResponse({'success': False, 'error': f'Error: {str(e)}'}, status=500)
 
 
+def _sse_response(iterator):
+    """SSE response that is never buffered by an intermediate proxy."""
+    response = StreamingHttpResponse(iterator, content_type='text/event-stream')
+    response['Cache-Control'] = 'no-cache'
+    response['X-Accel-Buffering'] = 'no'
+    return response
+
+
 @require_http_methods(["POST"])
 @require_login_json
 @throttle('20/min', 'ask', by='user')
 def ask_question_stream(request):
-    """Streaming version of ask_question (Agentic RAG)."""
+    """Streaming version of ask_question (Agentic RAG).
+
+    The view stays synchronous, but the body of the response is an async
+    generator. Django hands async iterators to the ASGI event loop directly,
+    so chunks reach the browser as they are produced; a sync generator would
+    be offloaded to a thread and delivered in one buffered blob.
+    """
     try:
         data = json.loads(request.body)
         question = data.get('question', '')
@@ -359,24 +373,24 @@ def ask_question_stream(request):
         attached_doc_id = data.get('attached_doc_id', None)
 
         if not question:
-            def err():
+            async def err():
                 yield json.dumps({"type": "error", "text": "Question is required"}) + "\n"
-            return StreamingHttpResponse(err(), content_type='text/event-stream')
+            return _sse_response(err())
 
         logger.info(f"--- STREAMING AGENT QUERY --- | '{question}' | Region: {region or 'All'} | Attached Doc: {attached_doc_id}")
 
-        def generate():
+        async def generate():
             agent_service = get_agent()
-            for event_json in agent_service.stream_ask_sync(question, region, attached_doc_id):
+            async for event_json in agent_service.stream_ask(question, region, attached_doc_id):
                 yield event_json
 
-        return StreamingHttpResponse(generate(), content_type='text/event-stream')
+        return _sse_response(generate())
 
     except Exception as e:
         logger.error(f"❌ Streaming error: {e}", exc_info=True)
-        def err():
+        async def err():
             yield json.dumps({"type": "error", "text": f"Error: {str(e)}"}) + "\n"
-        return StreamingHttpResponse(err(), content_type='text/event-stream')
+        return _sse_response(err())
 
 
 @csrf_exempt
